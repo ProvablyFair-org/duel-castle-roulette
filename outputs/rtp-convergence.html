@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>DUEL CASTLE ROULETTE — 5M SIMULATED ROUNDS</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; color: #333; padding: 24px; }
+  .container { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; padding: 32px; }
+  .chart-wrap { position: relative; height: 420px; margin-bottom: 24px; }
+  h1 { text-align: center; font-size: 16px; font-weight: 600; color: #333; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  h2 { text-align: center; font-size: 14px; color: #666; margin-top: 40px; margin-bottom: 8px; }
+  .note { text-align: center; font-size: 11px; color: #999; margin: 4px 0 12px; }
+  .box { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin: 16px auto; max-width: 900px; text-align: center; }
+</style>
+</head><body>
+<div class="container">
+
+<h1>DUEL CASTLE ROULETTE — OVERALL RTP CONVERGENCE</h1>
+<p class="note">10 streams x 500K = 5M rounds | Fisher's method | 2x Dark Blue bet</p>
+<div class="chart-wrap"><canvas id="overall"></canvas></div>
+
+<div class="box">
+  Final RTP: <strong>100.0070%</strong> | Theoretical: 100.0000% (zero edge)<br>
+  Fisher's combined p: <strong>0.771166</strong> (T=15.09, df=20) | Serial failures: 0
+</div>
+
+<h2>PER-COLOR RTP CONVERGENCE — ALL 6 TIERS</h2>
+<p class="note">Each line = RTP if player bet $1 on that color every round | All converge to 100% (zero edge by construction)</p>
+<div class="chart-wrap"><canvas id="percolor"></canvas></div>
+
+<script>
+const labels = ["1K","5K","10K","50K","100K","500K","1M","2M","5M"];
+const overallData = [98.8,99.11999999999999,99.8,99.592,99.41,99.9624,99.939,100.0646,100.007];
+const colorConv = [[110.4,86.4,92.80000000000001,99.2,106,98.8],[96,84.96000000000001,98.24000000000001,103.2,103.44,99.11999999999999],[93.60000000000001,92.4,96,103.44,101.47999999999999,99.8],[96.192,100.224,97.98400000000001,101.03999999999999,101.08,99.592],[99.648,100.584,99.21600000000001,100.67200000000001,100.972,99.41],[99.8112,100.2864,98.9696,100.064,100.2688,99.9624],[100.14240000000001,100.2048,99.4624,100.0808,100.17,99.939],[99.792,100.15799999999999,99.5984,99.92760000000001,99.9984,100.0646],[99.92832,100.10496,100.0048,99.95551999999999,99.99552,100.007]];
+const colorNames = ["Green (48x)","Red (24x)","Purple (16x)","Blue (8x)","Grey (4x)","Dark Blue (2x)"];
+const colorColors = ["#2dff82","#ff4444","#b44aff","#4a90ff","#8899aa","#1a3a6a"];
+
+// Chart 1: Overall
+new Chart(document.getElementById('overall'),{type:'line',data:{labels,
+datasets:[{label:'Cumulative RTP',data:overallData,borderColor:'#1565c0',tension:0.3,pointRadius:4},
+{label:'Theoretical (100%)',data:labels.map(()=>100),borderColor:'#e57373',borderDash:[5,5],pointRadius:0}]},
+options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:95,max:105,ticks:{color:'#666',callback:v=>v+'%'},grid:{color:'#e0e0e0'}},x:{ticks:{color:'#666'},grid:{color:'#e0e0e0'}}},
+plugins:{legend:{labels:{color:'#333'}}}}});
+
+// Chart 2: Per-color
+const colorDatasets = colorNames.map((name, i) => ({
+  label: name,
+  data: colorConv.map(c => c[i]),
+  borderColor: colorColors[i],
+  tension: 0.3,
+  pointRadius: 3,
+  borderWidth: 2,
+}));
+colorDatasets.push({label:'Theoretical (100%)',data:labels.map(()=>100),borderColor:'#e57373',borderDash:[5,5],pointRadius:0,borderWidth:1});
+
+new Chart(document.getElementById('percolor'),{type:'line',data:{labels,datasets:colorDatasets},
+options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:80,max:120,ticks:{color:'#666',callback:v=>v+'%'},grid:{color:'#e0e0e0'}},x:{ticks:{color:'#666'},grid:{color:'#e0e0e0'}}},
+plugins:{legend:{labels:{color:'#333',font:{size:11}}}}}});
+</script>
+</div>
+</body></html>

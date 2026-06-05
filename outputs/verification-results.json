@@ -1,0 +1,142 @@
+{
+  "generatedAt": "2026-06-10T12:12:53.002Z",
+  "totalRounds": 1350,
+  "steps": [
+    {
+      "step": 1,
+      "name": "Seed Hash Integrity",
+      "status": "PASS",
+      "detail": "1350/1350 hashes verified — SHA-256(serverSeed_bytes) === serverSeedHash"
+    },
+    {
+      "step": 2,
+      "name": "drand Commitment Timing (Pre-Commitment)",
+      "status": "PASS",
+      "detail": "1350/1350 rounds — bet placed before drand published (min margin: 14.763s, mean: 20.067s, max: 20.405s; via authoritative transactions-API timestamp + drand chain formula)"
+    },
+    {
+      "step": 3,
+      "name": "drand Round Monotonicity",
+      "status": "PASS",
+      "detail": "1350 rounds — drand round IDs strictly increasing (no round shopping)"
+    },
+    {
+      "step": 4,
+      "name": "Server Seed Uniqueness",
+      "status": "PASS",
+      "detail": "1350 unique seeds, 1350 unique hashes out of 1350 rounds"
+    },
+    {
+      "step": 5,
+      "name": "Position Recomputation",
+      "status": "PASS",
+      "detail": "1350/1350 positions recomputed from (serverSeed, drandSeed) — 100% parity"
+    },
+    {
+      "step": 6,
+      "name": "Bet-Size Invariance",
+      "status": "PASS",
+      "detail": "100/100 Phase C ($1) rounds recompute identically — position is independent of bet amount"
+    },
+    {
+      "step": 7,
+      "name": "Payout Math",
+      "status": "PASS",
+      "detail": "1350/1350 payouts verified — 1350/1350 isWin flags correct"
+    },
+    {
+      "step": 8,
+      "name": "Color-Position Mapping",
+      "status": "PASS",
+      "detail": "1350/1350 — position maps to correct color/multiplier tier for all rounds"
+    },
+    {
+      "step": 9,
+      "name": "Captured effectiveEdge Field Consistency",
+      "status": "PASS",
+      "detail": "1350/1350 rounds carry effectiveEdge = 0 (operator field consistent with Zero Edge); the independent zero-edge proof is the wheel construction in Step 13"
+    },
+    {
+      "step": 10,
+      "name": "Phase Coverage",
+      "status": "PASS",
+      "detail": "Phase A: 800/800, Phase B: 200/200, Phase C: 100/100, Phase D: 100/100, Phase E: 150/150 — total 1350"
+    },
+    {
+      "step": 11,
+      "name": "Dataset Hash",
+      "status": "PASS",
+      "detail": "SHA-256 pre-flight check passed (verified before loading)"
+    },
+    {
+      "step": 12,
+      "name": "drand Chain Formula",
+      "status": "PASS",
+      "detail": "1350/1350 drandPublishedAt values match quicknet formula (genesis + (round-1) × 3s)"
+    },
+    {
+      "step": 13,
+      "name": "Anti-Circularity (Zero Edge by Construction)",
+      "status": "PASS",
+      "detail": "6 color tiers verified: P × multiplier = 1.000 for each (RTP = 100.0000% by the count×multiplier=48 identity). Per-tier EV deviation from the modulo bias (positions 0-15 slightly favored) is ~7.45×10⁻⁹ — negligible. Total probability sums to 1.0."
+    },
+    {
+      "step": 14,
+      "name": "Simulation Pass 1 (Fisher's Combined — 10 Streams)",
+      "status": "PASS",
+      "detail": "10 streams × 500,000 rounds = 5,000,000 total — Fisher's T=15.09, df=20, p=0.7712 | 0/10 streams below α=0.01 | serial: 0 failures | simRTP=100.0070%"
+    },
+    {
+      "step": 15,
+      "name": "Simulation Pass 2 (Casino Seeds)",
+      "status": "PASS",
+      "detail": "1350 casino seeds × 1000 random drand values — 15 chi-squared failures (expected ≤25 under H₀) | meanRTP=99.9985%"
+    },
+    {
+      "step": 16,
+      "name": "drand API Signature Verification",
+      "status": "PASS",
+      "detail": "1350/1350 drand signatures matched byte-for-byte against api.drand.sh (chain: quicknet) — 0 failures"
+    }
+  ],
+  "info": [
+    {
+      "label": "Position Distribution (chi-squared, 48 bins)",
+      "detail": "chi2=36.52, df=47, p=0.8650 — informational (simulation is authoritative)"
+    },
+    {
+      "label": "two (2×) — n=934",
+      "detail": "win rate: 48.1% (expected 50.0%) | RTP: 83.2% — informational"
+    },
+    {
+      "label": "four (4×) — n=34",
+      "detail": "win rate: 23.5% (expected 25.0%) | RTP: 94.1% — informational"
+    },
+    {
+      "label": "eight (8×) — n=33",
+      "detail": "win rate: 12.1% (expected 12.5%) | RTP: 97.0% — informational"
+    },
+    {
+      "label": "sixteen (16×) — n=133",
+      "detail": "win rate: 3.8% (expected 6.3%) | RTP: 60.2% — informational"
+    },
+    {
+      "label": "twenty_four (24×) — n=33",
+      "detail": "win rate: 9.1% (expected 4.2%) | RTP: 218.2% — informational"
+    },
+    {
+      "label": "forty_eight (48×) — n=183",
+      "detail": "win rate: 2.2% (expected 2.1%) | RTP: 104.9% — informational"
+    },
+    {
+      "label": "Overall Empirical RTP",
+      "detail": "83.77% — theoretical 100.0% (zero edge). Informational only."
+    }
+  ],
+  "summary": {
+    "passed": 16,
+    "flags": 0,
+    "hardFail": 0,
+    "verdict": "PROVABLY FAIR — Full Pass"
+  }
+}

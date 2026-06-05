@@ -1,0 +1,19 @@
+{
+  "name": "duel-castle-roulette-audit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Provably fair audit — Duel.com Castle Roulette (drand-based)",
+  "scripts": {
+    "test": "mocha && npm run simulate && npm run verify",
+    "verify": "ts-node tests/verify.ts",
+    "timing": "node src/verify-drand-timing.js",
+    "simulate": "ts-node src/simulate.ts"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "mocha": "^10.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
