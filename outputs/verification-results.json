@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T12:12:53.002Z",
+  "generatedAt": "2026-09-14T20:46:11.700Z",
   "totalRounds": 1350,
   "steps": [
     {
@@ -97,6 +97,12 @@
       "name": "drand API Signature Verification",
       "status": "PASS",
       "detail": "1350/1350 drand signatures matched byte-for-byte against api.drand.sh (chain: quicknet) — 0 failures"
+    },
+    {
+      "step": 17,
+      "name": "Artifact Integrity (pinned artifacts of record)",
+      "status": "PASS",
+      "detail": "3 artifact(s) checked against src/artifact-pins.ts; drand-api-verification.json matches its pin; rtp-convergence.html matches its pin; simulation-results.json matches its pin"
     }
   ],
   "info": [
@@ -134,7 +140,7 @@
     }
   ],
   "summary": {
-    "passed": 16,
+    "passed": 17,
     "flags": 0,
     "hardFail": 0,
     "verdict": "PROVABLY FAIR — Full Pass"
