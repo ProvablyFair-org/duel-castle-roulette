@@ -1,0 +1,46 @@
+/**
+ * Simulation seed schedule — shared by src/simulate.ts (the producer) and tests/steps/simulation.ts
+ * (Steps 14–15, which REPLAY from it).
+ *
+ * Every input the simulation consumes is derived here from MASTER_SEED, or from the pinned dataset.
+ * Keeping the derivation in one module is what lets the verifier regenerate the simulator's inputs
+ * instead of trusting the numbers the simulator wrote down: the same function the producer called
+ * is the one the verifier calls, and the verifier compares what it gets with the artifact.
+ */
+
+import * as crypto from 'crypto';
+import { computePositionFromBuffer, RANGE } from './rng';
+
+export const MASTER_SEED = 'castle-roulette-audit-simulation-2026-04-23';
+
+export const PASS1_STREAMS      = 10;
+export const PASS1_ROUNDS_EACH  = 500_000;
+export const PASS1_ROUNDS_TOTAL = PASS1_STREAMS * PASS1_ROUNDS_EACH; // 5,000,000
+export const PASS2_NONCES       = 1_000;
+/** Cumulative round marks of the Pass-1 convergence series (moved here from src/simulate.ts on
+ *  2026-09-26, values unchanged, so Step 14 replays the series from the same declaration). */
+export const PASS1_CONVERGENCE_POINTS: readonly number[] =
+  Object.freeze([1000, 5000, 10000, 50000, 100000, 500000, 1000000, 2000000, 5000000]);
+
+export function deterministicSeed(index: number, prefix: string): string {
+  return crypto.createHmac('sha256', MASTER_SEED).update(`${prefix}:${index}`).digest('hex');
+}
+
+/** Pass 1, stream `s`, round `i`: the wheel position the simulator drew. */
+export function pass1Position(s: number, i: number): number {
+  const serverSeed = deterministicSeed(i, `server-stream-${s}`);
+  const drandSeed = deterministicSeed(i, `drand-stream-${s}`) + deterministicSeed(i, `drand2-stream-${s}`).slice(0, 32);
+  return computePositionFromBuffer(Buffer.from(serverSeed, 'hex'), drandSeed);
+}
+
+/** Pass 2: the synthetic drand value used for casino seed `s`, nonce `n`. */
+export function pass2Drand(s: number, n: number): string {
+  return deterministicSeed(s * PASS2_NONCES + n, 'p2drand') + deterministicSeed(s * PASS2_NONCES + n, 'p2drand2').slice(0, 32);
+}
+
+/** Per-position counts of one Pass-1 stream, regenerated from the schedule. */
+export function replayPass1Stream(s: number): number[] {
+  const observed = new Array(RANGE).fill(0);
+  for (let i = 0; i < PASS1_ROUNDS_EACH; i++) observed[pass1Position(s, i)]++;
+  return observed;
+}

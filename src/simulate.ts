@@ -9,25 +9,33 @@
  *   48 positions, combined via Fisher's: T = -2 Σ ln(p_i) ~ χ²(2K).
  *   Serial independence tested on full 5M combined stream.
  *
- * Pass 2: Casino seeds from dataset × random drand values — cherry-pick detection.
+ * Pass 2: Casino seeds from dataset × random drand values — a seed-selection-by-outcome screen; it cannot see a
+ *         seed chosen for its own beacon (MANIFEST S5-4, P6).
  *
  * Run: npm run simulate
  * Output: outputs/simulation-results.json + outputs/rtp-convergence.html
  */
 
-import * as crypto from 'crypto';
 import * as fs     from 'fs';
 import * as path   from 'path';
 import { computePositionFromBuffer, RANGE, PAYOUT_TABLE } from './rng';
 import { chiSquaredTest, chiSquaredPValue, lag1Autocorrelation, runsTest, normalCDF } from './stats';
 import { loadDataset } from './loader';
 
-const PASS1_STREAMS    = 10;
-const PASS1_ROUNDS_EACH = 500_000;
-const PASS1_ROUNDS_TOTAL = PASS1_STREAMS * PASS1_ROUNDS_EACH; // 5,000,000
-const PASS2_NONCES     = 1_000;
+import {
+  PASS1_STREAMS, PASS1_ROUNDS_EACH, PASS1_ROUNDS_TOTAL, PASS2_NONCES, PASS1_CONVERGENCE_POINTS, pass1Position, pass2Drand,
+} from './sim-seeds';
 
-const outputsDir = path.join(__dirname, '../outputs');
+// A SIMULATION RUN MUST NOT REWRITE THE ARTIFACTS OF RECORD. `outputs/simulation-results.json`
+// and `outputs/rtp-convergence.html` are committed, pinned in src/artifact-pins.ts and scored by
+// steps 14–15 and 18; a casual `npm run simulate` overwriting them would rewrite the evidence the
+// verifier compares against. Without PF_EMIT=1 this run writes under outputs/run/ (gitignored, a
+// run record). Refreshing the committed copies is the deliberate `PF_EMIT=1 npm run simulate`,
+// followed by re-pinning them in src/artifact-pins.ts in the same change.
+const PF_EMIT = process.env.PF_EMIT === '1';
+const committedDir = path.join(__dirname, '../outputs');
+const outputsDir = PF_EMIT ? committedDir : path.join(committedDir, 'run');
+const WROTE_TO = PF_EMIT ? 'outputs' : 'outputs/run';
 if (!fs.existsSync(outputsDir)) fs.mkdirSync(outputsDir, { recursive: true });
 
 // ── Progress bar ──────────────────────────────────────────────────────────
@@ -43,11 +51,8 @@ function progressBar(current: number, total: number, label: string, startMs: num
 
 // ── Deterministic seed generation ────────────────────────────────────────
 
-const MASTER_SEED = 'castle-roulette-audit-simulation-2026-04-23';
-
-function deterministicSeed(index: number, prefix: string): string {
-  return crypto.createHmac('sha256', MASTER_SEED).update(`${prefix}:${index}`).digest('hex');
-}
+// MASTER_SEED and the seed derivation live in src/sim-seeds.ts, shared with Steps 14–15 so the
+// verifier can regenerate this run's inputs rather than trust its outputs.
 
 // ── Pass 1: Multi-stream Fisher's method ─────────────────────────────────
 
@@ -63,6 +68,7 @@ interface StreamResult {
   df: number;
   pValue: number;
   rtp: number;
+  observed: number[];
 }
 
 const streamResults: StreamResult[] = [];
@@ -71,7 +77,8 @@ let cumulativeWagered = 0;
 let cumulativeReturned = 0;
 let globalRound = 0;
 
-const convergencePoints = [1000, 5000, 10000, 50000, 100000, 500000, 1000000, 2000000, 5000000];
+// Declared in src/sim-seeds.ts since 2026-09-26 (values unchanged) so Step 14 can replay the series.
+const convergencePoints = [...PASS1_CONVERGENCE_POINTS];
 const convergenceData: Array<{ rounds: number; rtp: number }> = [];
 
 // Per-color RTP tracking (each color = bet $1 on that color every round)
@@ -95,10 +102,7 @@ for (let s = 0; s < PASS1_STREAMS; s++) {
 
   for (let i = 0; i < PASS1_ROUNDS_EACH; i++) {
     // Each stream uses its own seed prefix for independence
-    const serverSeed = deterministicSeed(i, `server-stream-${s}`);
-    const drandSeed = deterministicSeed(i, `drand-stream-${s}`) + deterministicSeed(i, `drand2-stream-${s}`).slice(0, 32);
-    const keyBuffer = Buffer.from(serverSeed, 'hex');
-    const pos = computePositionFromBuffer(keyBuffer, drandSeed);
+    const pos = pass1Position(s, i);
 
     observed[pos]++;
     allPositions.push(pos);
@@ -140,6 +144,10 @@ for (let s = 0; s < PASS1_STREAMS; s++) {
     df: chi.df,
     pValue: chi.pValue,
     rtp: streamReturned / streamWagered,
+    // The 48 per-position counts are the raw input of this stream's chi-squared. Shipping them
+    // lets Step 14 recompute chi2, p, the stream RTP and Fisher's combination instead of reading
+    // them, and replay a stream from src/sim-seeds.ts to bind the counts to the generator.
+    observed: [...observed],
   });
 }
 progressBar(PASS1_ROUNDS_TOTAL, PASS1_ROUNDS_TOTAL, 'done', startP1);
@@ -199,7 +207,7 @@ for (let s = 0; s < casinoSeeds.length; s++) {
   const obs = new Array(RANGE).fill(0);
 
   for (let n = 0; n < PASS2_NONCES; n++) {
-    const drand = deterministicSeed(s * PASS2_NONCES + n, 'p2drand') + deterministicSeed(s * PASS2_NONCES + n, 'p2drand2').slice(0, 32);
+    const drand = pass2Drand(s, n);
     const pos = computePositionFromBuffer(keyBuf, drand);
     obs[pos]++;
 
@@ -230,7 +238,10 @@ console.log(`  Time: ${((Date.now() - startP2) / 1000).toFixed(1)}s\n`);
 // ── Write results ─────────────────────────────────────────────────────────
 
 const simResults = {
-  generatedAt: new Date().toISOString(),
+  // NO `generatedAt`: this file is pinned by SHA-256 (src/artifact-pins.ts), and a run timestamp
+  // inside a pinned artifact makes the pin unreproducible even when every figure is identical.
+  // Every other field is deterministic (MASTER_SEED-derived streams, dataset-derived pass 2), so a
+  // no-change `PF_EMIT=1 npm run simulate` reproduces the pinned bytes exactly.
   pass1_fresh_seeds: {
     totalRounds: PASS1_ROUNDS_TOTAL,
     streams: PASS1_STREAMS,
@@ -256,15 +267,22 @@ const simResults = {
 
 fs.writeFileSync(path.join(outputsDir, 'simulation-results.json'), JSON.stringify(simResults, null, 2));
 console.log('════════════════════════════════════════════════════════════');
-console.log('  Written: outputs/simulation-results.json');
+console.log(`  Written: ${WROTE_TO}/simulation-results.json`);
 
 // ── RTP Convergence Chart ─────────────────────────────────────────────────
 
 const chartLabels = convergenceData.map(d => d.rounds >= 1e6 ? (d.rounds / 1e6) + 'M' : d.rounds >= 1e3 ? (d.rounds / 1e3) + 'K' : String(d.rounds));
 
+// Chart.js is INLINED into the pinned chart (Mike 2026-09-28, F16): a pinned artifact that loads a script
+// from a CDN renders only while a third party serves the same bytes. The library is read verbatim from the
+// npm package pinned (exact version) in package.json / package-lock.json and interpolated as a value.
+const CHARTJS_VERSION = '4.4.7';
+const CHARTJS_SOURCE = fs.readFileSync(path.join(path.dirname(require.resolve('chart.js')), 'chart.umd.js'), 'utf8');
+
 const chartHtml = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>DUEL CASTLE ROULETTE — ${(PASS1_ROUNDS_TOTAL / 1_000_000).toFixed(0)}M SIMULATED ROUNDS</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<!-- Chart.js ${CHARTJS_VERSION} dist/chart.umd.js inlined verbatim from the npm package pinned in package-lock.json -->
+<script>${CHARTJS_SOURCE}<\/script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; color: #333; padding: 24px; }
@@ -283,12 +301,12 @@ const chartHtml = `<!DOCTYPE html>
 <div class="chart-wrap"><canvas id="overall"></canvas></div>
 
 <div class="box">
-  Final RTP: <strong>${(simRTP * 100).toFixed(4)}%</strong> | Theoretical: 100.0000% (zero edge)<br>
+  Final RTP: <strong>${(simRTP * 100).toFixed(4)}%</strong> | Baseline (pre-settlement-edge) theoretical: 100.0000%<br>
   Fisher's combined p: <strong>${fisherP.toFixed(6)}</strong> (T=${fisherStat.toFixed(2)}, df=${fisherDf}) | Serial failures: ${serialIndependenceFails}
 </div>
 
 <h2>PER-COLOR RTP CONVERGENCE — ALL 6 TIERS</h2>
-<p class="note">Each line = RTP if player bet $1 on that color every round | All converge to 100% (zero edge by construction)</p>
+<p class="note">Each line = RTP if player bet $1 on that color every round | All converge to the 100% baseline the paytable enforces</p>
 <div class="chart-wrap"><canvas id="percolor"></canvas></div>
 
 <script>
@@ -324,9 +342,11 @@ plugins:{legend:{labels:{color:'#333',font:{size:11}}}}}});
 </body></html>`;
 
 fs.writeFileSync(path.join(outputsDir, 'rtp-convergence.html'), chartHtml);
-console.log('  Written: outputs/rtp-convergence.html');
+console.log(`  Written: ${WROTE_TO}/rtp-convergence.html`);
+if (!PF_EMIT) console.log('  Committed artifacts NOT modified (set PF_EMIT=1 to refresh them, then re-pin in src/artifact-pins.ts).');
 console.log('════════════════════════════════════════════════════════════\n');
 
-// normalCDF imported from ./stats — single canonical implementation. The local
-// copy that used to live here had the erf path operating on z instead of z/√2,
-// producing lag1P off by ~23× (fix landed June 2026 — see audit note).
+// normalCDF is imported from ./stats — the single canonical implementation. A local copy used to
+// live here whose erf path operated on z instead of z/√2, so it reported lag1P = 0.000747 for
+// lag1Z = −2.384 where the correct two-sided p is 0.017123. The serial-independence verdict never
+// depended on lag1P (it is |lag1Z| < 3 AND runsP >= 0.01), so no PASS/FAIL changed; the figure did.

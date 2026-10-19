@@ -11,7 +11,7 @@ if (window._crkill) window._crkill();
   window._crkill = function () { INSTANCE = -1; };
 
   // ── Phase config ────────────────────────────────────────────────────────
-  // Castle Roulette: 48 positions (0-47), 6 color tiers, zero edge.
+  // Castle Roulette: 48 positions (0-47), 6 color tiers, count x multiplier = 48 per tier.
   // Phases A-C: standard capture (baseline, varied colors, bet-size invariance).
   // Phases D-E: supplementary — extra payout coverage on rare multiplier tiers.
   var PHASES = [

@@ -1,0 +1,45 @@
+{
+  "package": "duel/castle-roulette",
+  "game": "castle-roulette",
+  "settingSpace": "the six colour tiers (Green 48×, Red 24×, Purple 16×, Blue 8×, Grey 4×, Dark Blue 2×)",
+  "rtpMethod": "exact rational: uint32 counts per position (floor(2^32/48) + [p < 16]) summed over the tier / 2^32 × multiplier",
+  "rule": "RTP-CLAIM",
+  "ruleVersion": "1.2.0 (Methodology v1.1: places, per-setting, stake tiers, noted, published, RTP Figure Overstated; agreed 2026-10-14; 1.1.0 2026-10-01; 1.0.0 2026-09-29)",
+  "bandPp": "0.10",
+  "claim": {
+    "kind": "noted",
+    "source": "game page: Duel's Zero Edge allowance as disclosed by Duel engineering and reflected live in the game UI (MANIFEST.md#payouts-and-rtp); game settings: GET /api/v2/metadata/roulette (E10, fetched 2026-10-05) states the settlement edge beyond the allowance, min_house_edge_limit 0.1 and max_house_edge_limit 5 (%), which no captured stake reached (DL-5)",
+    "text": "Zero Edge: no settlement edge on up to $1,000 of a bet, within $50,000 of wager per 24 hours; served credit = stake × table multiplier on all 473 winning rounds captured (Step 9)"
+  },
+  "settings": 6,
+  "trueMin": {
+    "setting": "tier=dark_blue (2x)",
+    "rtpExact": "268435455/268435456",
+    "rtpPct": "100.000000"
+  },
+  "trueMax": {
+    "setting": "tier=green (48x)",
+    "rtpExact": "134217729/134217728",
+    "rtpPct": "100.000001"
+  },
+  "houseSideFailures": 0,
+  "playerFavourable": 0,
+  "worst": {
+    "setting": "tier=dark_blue (2x)",
+    "gapPp": null
+  },
+  "rangeChecks": [],
+  "outcome": "NOTED",
+  "minimalFix": "none — a noted line (site-wide, rakeback, zero-edge or promotion) is recorded, not tested; the true range is 99.99–100.01%",
+  "unstated": 0,
+  "rowsComplete": true,
+  "buckets": [],
+  "rows": [
+    {"setting":"tier=green (48x)","rtpExact":"134217729/134217728","rtpPct":"100.000001","gapPp":null,"side":"noted","outcome":"NOTED"},
+    {"setting":"tier=red (24x)","rtpExact":"134217729/134217728","rtpPct":"100.000001","gapPp":null,"side":"noted","outcome":"NOTED"},
+    {"setting":"tier=purple (16x)","rtpExact":"134217729/134217728","rtpPct":"100.000001","gapPp":null,"side":"noted","outcome":"NOTED"},
+    {"setting":"tier=blue (8x)","rtpExact":"134217729/134217728","rtpPct":"100.000001","gapPp":null,"side":"noted","outcome":"NOTED"},
+    {"setting":"tier=grey (4x)","rtpExact":"1/1","rtpPct":"100.000000","gapPp":null,"side":"noted","outcome":"NOTED"},
+    {"setting":"tier=dark_blue (2x)","rtpExact":"268435455/268435456","rtpPct":"100.000000","gapPp":null,"side":"noted","outcome":"NOTED"}
+  ]
+}

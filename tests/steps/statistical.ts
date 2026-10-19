@@ -67,7 +67,7 @@ export function run(ctx: VerifyContext): InfoItem[] {
     const overallRtp = totalWagered > 0 ? totalReturned / totalWagered : 0;
     info.push({
       label: 'Overall Empirical RTP',
-      detail: `${(overallRtp * 100).toFixed(2)}% — theoretical 100.0% (zero edge). Informational only.`,
+      detail: `${(overallRtp * 100).toFixed(2)}% — baseline (pre-settlement-edge) theoretical 100.0%. Informational only.`,
     });
   }
 

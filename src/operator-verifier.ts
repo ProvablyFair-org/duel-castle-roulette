@@ -1,0 +1,157 @@
+/**
+ * THE OPERATOR'S OWN VERIFIER CODE (profile CASTLE-09; Step 5, operator leg).
+ *
+ * Duel.com's Provably Fair → Verify page, with Castle Roulette selected, shows a JavaScript code panel.
+ * That code is the operator's published algorithm for Castle Roulette — Duel's own source for the position.
+ *
+ * PROVENANCE. Pasted by Paulo from duel.com → Provably Fair → Verify (Castle Roulette) on 2026-09-26 and
+ * saved verbatim as evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js (committed in
+ * 9333460; 2,263 bytes, 72 lines). The file is never edited. Until then Castle Roulette's Verify-tab
+ * code was not in the workspace (CASTLE-09 partial). What this does NOT establish: that the Verify
+ * button on the live page runs exactly the code its panel displays, or that Duel's server runs it.
+ *
+ * WHAT THIS FILE DOES.
+ *   1. PINS the SHA-256 of that file and of the runner that executes it (OPERATOR_VERIFIER_PINS).
+ *      A file that does not hash to its pin FAILs Step 5 before anything runs.
+ *   2. EXECUTES the file in a child Node process (verifier-parity/operator/run-operator-verifier.cjs;
+ *      its header lists the whole harness surface). The runner does what a player does in the Verify
+ *      tab: it fills in the file's two "User input values" — serverSeed and drandSeed (the round's
+ *      drandRandomness, the hex BLS signature exactly as captured: the file hex-decodes it to a UTF-8
+ *      string itself, L54) — and runs it; only the literals on those two lines change, every other line
+ *      is asserted byte-identical. The file's validateRouletteResult returns (value % RANGE).toString()
+ *      with RANGE = 48 (L49, L62) and the file prints "Roll result: <position>".
+ *      The runner's stdin and stdout are temp FILES, not pipes, and the run has a hard timeout.
+ *   3. CHECKS THE CITATIONS: every line src/rng.ts cites (OPERATOR_SOURCE_CITES) must carry, at that
+ *      line number of the pinned file, the text it quotes.
+ */
+
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { spawnSync } from 'child_process';
+import { OPERATOR_SOURCE_CITES } from './rng';
+
+export const PACKAGE_ROOT = path.join(__dirname, '..');
+export const OPERATOR_VERIFIER_FILE = 'evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js';
+export const OPERATOR_VERIFIER_RUNNER = 'verifier-parity/operator/run-operator-verifier.cjs';
+
+/** Package-relative path → SHA-256 of the exact bytes. */
+export const OPERATOR_VERIFIER_PINS: Readonly<Record<string, string>> = Object.freeze({
+  'evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js': 'c83dca216f2d79aee3f8d60fa663528a9b6298a157d0851450c0f31c5de92bc7',
+  'verifier-parity/operator/run-operator-verifier.cjs':                '8f70dc50f25e6919b68b3fa19bf3c9760439d8c283797ca363721e42a403c137',
+});
+
+export const OPERATOR_VERIFIER_PROVENANCE = Object.freeze({
+  copiedBy: 'Paulo',
+  copiedOn: '2026-09-26',
+  from: 'pasted by Paulo from duel.com Verify tab 2026-09-26 (duel.com → Provably Fair → Verify, game Castle Roulette, code panel)',
+  savedAs: OPERATOR_VERIFIER_FILE,
+  sha256: 'c83dca216f2d79aee3f8d60fa663528a9b6298a157d0851450c0f31c5de92bc7',
+  bytes: 2263,
+  lines: 72,
+});
+
+/** The only thing the file prints when it runs as shipped (its inputs are empty strings). */
+export const OPERATOR_EXPECTED_LOGS: readonly string[] = Object.freeze([
+  'Please provide valid serverSeed, clientSeed, and nonce (>=0) before running.',
+]);
+
+export interface OperatorRound { id: string; inputs: { serverSeed: string; drandSeed: string } }
+/** value: the operator's validateRouletteResult return — the position as a decimal STRING. */
+export interface OperatorResult { value: string | null; logs: string[]; error?: string }
+
+/** The operator's position string → integer 0..47, or null unless it is exactly String(n) for such n. */
+export function operatorPosition(s: string | null | undefined): number | null {
+  if (typeof s !== 'string' || !/^(0|[1-9]\d?)$/.test(s)) return null;
+  const n = Number(s);
+  return n >= 0 && n < 48 ? n : null;
+}
+export interface OperatorRun {
+  files: Array<{ file: string; pinned: string; actual: string | null; match: boolean }>;
+  hashesMatch: boolean;
+  /** id → what the operator's code returned and printed for that round. */
+  results: Map<string, OperatorResult> | null;
+  /** What the file printed when run as shipped (no inputs). */
+  shippedLogs: string[];
+  error: string | null;
+}
+
+const sha256 = (b: Buffer): string => crypto.createHash('sha256').update(b).digest('hex');
+
+/**
+ * HOW THE PINNED RUNNER IS STARTED. Its stdin and stdout are temp FILES, not pipes, and the run has a
+ * hard timeout (the pipe deadlock seen on 2026-09-25 in the Duel Blackjack battery: a runner idle at
+ * 0 % CPU with its pipe descriptors open for ~1 h 54 min). A runner that does not exit within
+ * OPERATOR_RUNNER_TIMEOUT_MS is SIGKILLed and reported as a failed run — the calling step FAILs.
+ */
+export const OPERATOR_RUNNER_TIMEOUT_MS = 300_000;
+function runPinnedRunner(root: string, input: string): { status: number | null; stdout: string; stderr: string; error?: Error } {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pf-operator-runner-'));
+  const inPath = path.join(dir, 'jobs.json');
+  const outPath = path.join(dir, 'out.json');
+  fs.writeFileSync(inPath, input);
+  const inFd = fs.openSync(inPath, 'r');
+  const outFd = fs.openSync(outPath, 'w');
+  try {
+    const r = spawnSync(process.execPath, [path.join(root, OPERATOR_VERIFIER_RUNNER), path.join(root, OPERATOR_VERIFIER_FILE)], {
+      stdio: [inFd, outFd, 'pipe'],
+      encoding: 'utf8',
+      timeout: OPERATOR_RUNNER_TIMEOUT_MS,
+      killSignal: 'SIGKILL',
+      maxBuffer: 1 << 24,
+    });
+    const timedOut = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT' || r.signal === 'SIGKILL';
+    return {
+      status: timedOut ? null : r.status,
+      stdout: fs.readFileSync(outPath, 'utf8'),
+      stderr: timedOut ? `runner killed after ${OPERATOR_RUNNER_TIMEOUT_MS} ms (hard timeout)` : (r.stderr || ''),
+      error: r.error,
+    };
+  } finally {
+    fs.closeSync(inFd);
+    fs.closeSync(outFd);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Hash the pinned files and, only if every one matches, run the operator's code on `rounds`.
+ * Never throws: a failure is returned as `error` so the calling step reports a FAIL.
+ */
+export function runOperatorVerifier(rounds: OperatorRound[], root = PACKAGE_ROOT): OperatorRun {
+  const files = Object.entries(OPERATOR_VERIFIER_PINS).map(([file, pinned]) => {
+    const p = path.join(root, file);
+    const actual = fs.existsSync(p) ? sha256(fs.readFileSync(p)) : null;
+    return { file, pinned, actual, match: actual === pinned };
+  });
+  const hashesMatch = files.every(f => f.match);
+  if (!hashesMatch) return { files, hashesMatch, results: null, shippedLogs: [], error: 'operator Verify-tab code or its runner does not match its pinned SHA-256' };
+  const r = runPinnedRunner(root, JSON.stringify({ rounds }));
+  if (r.status !== 0) {
+    return { files, hashesMatch, results: null, shippedLogs: [],
+      error: `operator verifier runner exited ${r.status}: ${(r.stderr || String(r.error || '')).trim().slice(0, 400)}` };
+  }
+  try {
+    const out = JSON.parse(r.stdout) as { shippedLogs: string[]; results: Array<{ id: string; value: OperatorResult['value']; logs: string[]; error?: string }> };
+    const results = new Map<string, OperatorResult>();
+    for (const x of out.results) results.set(String(x.id), { value: x.value ?? null, logs: x.logs ?? [], error: x.error });
+    return { files, hashesMatch, results, shippedLogs: out.shippedLogs, error: null };
+  } catch (e) {
+    return { files, hashesMatch, results: null, shippedLogs: [], error: `operator verifier output unreadable: ${(e as Error).message}` };
+  }
+}
+
+/** Every citation in src/rng.ts must quote, verbatim, the pinned operator file at the line it names. */
+export function checkOperatorCites(root = PACKAGE_ROOT): { checked: number; bad: string[] } {
+  const p = path.join(root, OPERATOR_VERIFIER_FILE);
+  if (!fs.existsSync(p)) return { checked: 0, bad: [`${OPERATOR_VERIFIER_FILE} not found`] };
+  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  const bad: string[] = [];
+  for (const c of OPERATOR_SOURCE_CITES) {
+    const at = lines[c.line - 1];
+    if (at === undefined || !at.includes(c.text)) bad.push(`L${c.line} does not contain ${JSON.stringify(c.text)} (it reads ${JSON.stringify((at ?? '').trim())})`);
+  }
+  if (OPERATOR_SOURCE_CITES.length === 0) bad.push('src/rng.ts cites no operator line');
+  return { checked: OPERATOR_SOURCE_CITES.length, bad };
+}

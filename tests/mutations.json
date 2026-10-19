@@ -1,0 +1,383 @@
+[
+ {
+  "name": "M01 a revealed server seed corrupted",
+  "step": 1,
+  "expect": "[FAIL] Step 1",
+  "guard": "CASTLE-01: every seed hashes to its commitment.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[10].result.serverSeed = '00'.repeat(32); // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M02 a bet placed after its beacon was published",
+  "step": 2,
+  "expect": "[FAIL] Step 2",
+  "guard": "CASTLE-17: the bet precedes the beacon.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[5].timing.betPlacedAt = rounds[5].timing.drandPublishedAt * 1000 + 1; rounds[5].timing.commitmentBeforeDrand = -1; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M03 two beacon rounds out of order",
+  "step": 3,
+  "expect": "[FAIL] Step 3",
+  "guard": "CASTLE-17: beacon round ids strictly increase.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[20].result.drandRoundId = rounds[19].result.drandRoundId; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M04 a server seed reused",
+  "step": 4,
+  "expect": "[FAIL] Step 4",
+  "guard": "CASTLE-05: one fresh seed per round.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[30].result.serverSeed = rounds[29].result.serverSeed; rounds[30].result.serverSeedHash = rounds[29].result.serverSeedHash; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M05 a served position altered",
+  "step": 5,
+  "expect": "[FAIL] Step 5",
+  "guard": "CASTLE-07: every position recomputes.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[40].result.position = (rounds[40].result.position + 1) % 48; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M05b site verifier derive.js edited without re-pin",
+  "step": 5,
+  "expect": "vendored site verifier does not match its pinned SHA-256",
+  "guard": "CASTLE-24: the vendored site verifier must hash to its pin.",
+  "file": "verifier-parity/games/castle-roulette/derive.js",
+  "find": "  const position = uintValue % 48;",
+  "replace": "  const position = uintValue % 48; ",
+  "runner": "verify"
+ },
+ {
+  "name": "M05c site verifier reduction forged and re-pinned",
+  "step": 5,
+  "expect": "site verifier disagrees",
+  "guard": "CASTLE-24: the site's reduction is executed.",
+  "file": "verifier-parity/games/castle-roulette/derive.js",
+  "find": "  const position = uintValue % 48;",
+  "replace": "  const position = uintValue % 47;",
+  "repin": [
+   {
+    "file": "src/site-verifier.ts",
+    "find": "44f821b59effc345e909cffae5f9c7fd50d1084a348d5e513322fefe0f55e98e",
+    "hashOf": "verifier-parity/games/castle-roulette/derive.js"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M05d the draw narrowed to 24 bits",
+  "step": 5,
+  "expect": "exceeds the 2^-32 ceiling",
+  "guard": "CASTLE-08: the bias bound is computed from the domain the draw reads.",
+  "file": "src/rng.ts",
+  "find": "export const DRAW_HEX_CHARS = 8;",
+  "replace": "export const DRAW_HEX_CHARS = 6;",
+  "runner": "verify"
+ },
+ {
+  "name": "M05e operator Verify-tab file logic changed (hex bytes XOR 1) and re-pinned",
+  "step": 5,
+  "runner": "verify",
+  "expect": "OPERATOR VERIFY-TAB CODE PARITY (CASTLE-09)",
+  "guard": "CASTLE-09: forged evidence — Duel's vendored Castle Roulette Verify-tab code is changed on an uncited line AND its SHA-256 pin re-computed, so the hash check accepts it; executing it on every round must expose it.",
+  "edits": [
+   {
+    "file": "evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js",
+    "find": "bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);",
+    "replace": "bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16) ^ 1;"
+   }
+  ],
+  "repin": [
+   {
+    "file": "src/operator-verifier.ts",
+    "find": "c83dca216f2d79aee3f8d60fa663528a9b6298a157d0851450c0f31c5de92bc7",
+    "hashOf": "evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js"
+   }
+  ]
+ },
+ {
+  "name": "M05f operator Verify-tab file byte changed without re-pin",
+  "step": 5,
+  "runner": "verify",
+  "expect": "does not match its pinned SHA-256",
+  "guard": "CASTLE-09: the vendored operator file must hash to its pin before it runs.",
+  "file": "evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js",
+  "find": "// Code written in javascript",
+  "replace": "// Code written in JavaScript"
+ },
+ {
+  "name": "M05g operator runner changed without re-pin",
+  "step": 5,
+  "runner": "verify",
+  "expect": "does not match its pinned SHA-256",
+  "guard": "CASTLE-09: the runner that executes the operator file is pinned too.",
+  "file": "verifier-parity/operator/run-operator-verifier.cjs",
+  "find": "const ROUND_TIMEOUT_MS = 30_000;",
+  "replace": "const ROUND_TIMEOUT_MS = 31_000;"
+ },
+ {
+  "name": "M05h operator runner forged (drops the last beacon byte) and re-pinned",
+  "step": 5,
+  "runner": "verify",
+  "expect": "OPERATOR VERIFY-TAB CODE PARITY (CASTLE-09)",
+  "guard": "CASTLE-09: a re-pinned runner that feeds the operator code the wrong input must be caught by comparing its output with the served position, not only by the pin.",
+  "edits": [
+   {
+    "file": "verifier-parity/operator/run-operator-verifier.cjs",
+    "find": "const CALL = (m) => m.validateRouletteResult(m.drandSeed);",
+    "replace": "const CALL = (m) => m.validateRouletteResult(m.drandSeed.slice(0, -2));"
+   }
+  ],
+  "repin": [
+   {
+    "file": "src/operator-verifier.ts",
+    "find": "8f70dc50f25e6919b68b3fa19bf3c9760439d8c283797ca363721e42a403c137",
+    "hashOf": "verifier-parity/operator/run-operator-verifier.cjs"
+   }
+  ]
+ },
+ {
+  "name": "M05i src/rng.ts cites an operator line that does not carry the quoted text",
+  "step": 5,
+  "runner": "verify",
+  "expect": "src/rng.ts operator citations",
+  "guard": "CASTLE-09: every citation in src/rng.ts OPERATOR_SOURCE_CITES must quote the pinned operator file at the line it names.",
+  "file": "src/rng.ts",
+  "find": "{ line: 62, text: 'return (value % RANGE).toString();'",
+  "replace": "{ line: 61, text: 'return (value % RANGE).toString();'"
+ },
+ {
+  "name": "M06 a Phase C round's beacon value swapped",
+  "step": 6,
+  "expect": "[FAIL] Step 6",
+  "guard": "CASTLE-12: every elevated-stake round recomputes.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "{ const c = rounds.filter(r => r.phase === 'C'); c[0].result.drandRandomness = c[1].result.drandRandomness; } // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M07 a win credited one cent more",
+  "step": 7,
+  "expect": "[FAIL] Step 7",
+  "guard": "CASTLE-11: payouts exact on the 2-dp grid.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "{ const r = rounds.find(x => x.result.isWin)!; r.result.amountWon = (parseFloat(r.result.amountWon) + 0.01).toFixed(18); } // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M07b a win flag inverted",
+  "step": 7,
+  "expect": "[FAIL] Step 7",
+  "guard": "CASTLE-10: isWin follows the backed tier.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "{ const r = rounds.find(x => !x.result.isWin)!; r.result.isWin = true; } // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M08 a served multiplier off the table in its 18th decimal",
+  "step": 8,
+  "expect": "[FAIL] Step 8",
+  "guard": "CASTLE-13: the served multiplier equals the table exactly.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[0].result.multiplier = '2.000000000000000001'; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M09 a win credited at a 0.1% settlement edge",
+  "step": 9,
+  "expect": "[FAIL] Step 9",
+  "guard": "CASTLE-19: every win is credited stake × table multiplier exactly (zero settlement edge).",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "{ const r = rounds.find(x => x.result.isWin)!; r.result.amountWon = (parseFloat(r.result.amountWon) * 0.999).toFixed(18); } // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M10 a round relabelled into another phase",
+  "step": 10,
+  "expect": "[FAIL] Step 10",
+  "guard": "CASTLE-05: phase counts are bound to src/loader.ts.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[0].phase = 'B'; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M11 the dataset edited without re-pin",
+  "step": 11,
+  "expect": "[FAIL] Step 11",
+  "guard": "CASTLE-26: the dataset hash is pinned.",
+  "file": "data/castle-roulette-master-1350rounds.json",
+  "find": "\"schema\": \"duel-castle-roulette-capture\"",
+  "replace": "\"schema\":  \"duel-castle-roulette-capture\"",
+  "runner": "verify"
+ },
+ {
+  "name": "M12 a beacon publication time off the chain formula",
+  "step": 12,
+  "expect": "[FAIL] Step 12",
+  "guard": "CASTLE-17: publication time follows genesis + (round − 1) × 3 s.",
+  "file": "tests/verify.ts",
+  "find": "const phaseA = rounds.filter(r => r.phase === 'A');",
+  "replace": "rounds[3].timing.drandPublishedAt += 3; // MUTATION\nconst phaseA = rounds.filter(r => r.phase === 'A');",
+  "runner": "verify"
+ },
+ {
+  "name": "M13 the negative control disabled",
+  "step": 13,
+  "expect": "[FAIL] Step 13",
+  "guard": "CASTLE-18: the corrupted-table control must be rejected.",
+  "file": "tests/steps/dataset.ts",
+  "find": "if (Math.abs(tierProb * (tier.mult + 1) - 1.0) <= EV_BOUND) negativeControlAccepted++;",
+  "replace": "if (Math.abs(tierProb * (tier.mult + 0) - 1.0) <= EV_BOUND) negativeControlAccepted++;",
+  "runner": "verify"
+ },
+ {
+  "name": "M14 a Pass 1 stream chi-squared forged and re-pinned",
+  "step": 14,
+  "expect": "[FAIL] Step 14",
+  "guard": "CASTLE-20: stream statistics recompute from their counts.",
+  "file": "outputs/simulation-results.json",
+  "find": "\"chi2\": 58.39110399999999",
+  "replace": "\"chi2\": 58.4",
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "hashOf": "outputs/simulation-results.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M14b the Pass 1 lag-1 correlation forged and re-pinned",
+  "step": 14,
+  "expect": "recomputed from the replayed sequence",
+  "guard": "CASTLE-20: lag1R is recomputed from the full replayed 5,000,000-position sequence (since 2026-09-26), not read from the artifact.",
+  "file": "outputs/simulation-results.json",
+  "find": "\"lag1R\": -0.0010661824439608138,",
+  "replace": "\"lag1R\": -0.0000661824439608138,",
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "hashOf": "outputs/simulation-results.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M14c a Pass 1 convergence point forged and re-pinned",
+  "step": 14,
+  "expect": "!= replay {rounds: 2000000",
+  "guard": "CASTLE-20: the convergence series is replayed from src/sim-seeds.ts, not read.",
+  "file": "outputs/simulation-results.json",
+  "find": "\"rtp\": 1.000646",
+  "replace": "\"rtp\": 1.000746",
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "hashOf": "outputs/simulation-results.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M15 the Pass 2 failure count forged and re-pinned",
+  "step": 15,
+  "expect": "[FAIL] Step 15",
+  "guard": "CASTLE-21: Pass 2 is replayed and compared.",
+  "file": "outputs/simulation-results.json",
+  "find": "\"chi2Fails\": 15,",
+  "replace": "\"chi2Fails\": 14,",
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "hashOf": "outputs/simulation-results.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M16 a beacon signature row forged and re-pinned",
+  "step": 16,
+  "expect": "[FAIL] Step 16",
+  "guard": "CASTLE-17: every beacon value equals the public chain's.",
+  "file": "outputs/drand-api-verification.json",
+  "find": "\"apiSignature\": \"8d59f6f2c17c6c3a77f65dfc4b5530bb607c8891d21a90cdff2628d69a461ca692b6ad3c041e1c7a8a9d87005cd6621d\"",
+  "replace": "\"apiSignature\": \"0d59f6f2c17c6c3a77f65dfc4b5530bb607c8891d21a90cdff2628d69a461ca692b6ad3c041e1c7a8a9d87005cd6621d\"",
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "cd5554cecdc374480053e2262164b8db22313c9f487a2f73d0df1c4a98ff3f10",
+    "hashOf": "outputs/drand-api-verification.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M17 the coin-tier floor raised above a tier's rounds",
+  "step": 17,
+  "expect": "[FAIL] Step 17",
+  "guard": "CASTLE-15: every tier meets the floor.",
+  "file": "src/loader.ts",
+  "find": "export const MIN_ROUNDS_PER_COIN_TIER = 30;",
+  "replace": "export const MIN_ROUNDS_PER_COIN_TIER = 34;",
+  "runner": "verify"
+ },
+ {
+  "name": "M18 a pinned artifact edited without re-pin",
+  "step": 18,
+  "expect": "[FAIL] Step 18",
+  "guard": "CASTLE-27: every artifact of record is pinned.",
+  "file": "outputs/drand-api-verification.json",
+  "find": "\"failed\": 0,",
+  "replace": "\"failed\": 0 ,",
+  "runner": "verify"
+ },
+ {
+  "name": "M18b impossible value written AND re-pinned",
+  "step": 18,
+  "expect": "VALUE DOMAINS (CASTLE-27)",
+  "guard": "CASTLE-27: Step 18 checks every numeric leaf against src/domains.ts — a chi-squared fail count above the 1,350 seeds tested is impossible and must fail even though the artifact is re-pinned. (Step 15's replay also catches it; the marker proves the domain check fired on its own.)",
+  "file": "outputs/simulation-results.json",
+  "find": "\"chi2Fails\": 15,",
+  "replace": "\"chi2Fails\": 5000,",
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "hashOf": "outputs/simulation-results.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M19 every wheel position folded onto 0-23",
+  "step": 19,
+  "expect": "live-sample deviation",
+  "guard": "CASTLE-22: Step 19 reacts to the sample — a position census folded onto half the wheel must turn the step to INFO (informational: not counted, verdict unchanged; the run is rejected by the reproduction gate because the committed Step 19 record changes).",
+  "file": "tests/steps/live-fit.ts",
+  "find": "    counts[pos]++;",
+  "replace": "    counts[pos % 24]++; // MUTATION",
+  "runner": "verify"
+ }
+]

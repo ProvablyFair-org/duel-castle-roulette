@@ -1,0 +1,63 @@
+{
+  "auditId": "PF-2026-DL07",
+  "game": "castle-roulette",
+  "casino": "duel",
+  "release": "v1.1.0",
+  "framework": "1.1",
+  "simulation": {
+    "seeding": "pinned",
+    "seedSource": "src/sim-seeds.ts MASTER_SEED (every stream seed and Pass 2 drand value derived by HMAC-SHA256)",
+    "attestation": "all 10 Pass 1 streams replayed from src/sim-seeds.ts and lag1R, runs and the convergence series recomputed by Steps 14-15 on every npm test; npm run test:full regenerates the simulation into outputs/run/ and field-diffs it against the pinned artifact at the reproduction tolerance"
+  },
+  "runtime": {
+    "command": "npm test",
+    "measured": [
+      {
+        "date": "2026-09-28",
+        "machine": "Apple M2 Max",
+        "cores": 12,
+        "node": "22.23.1",
+        "wallSeconds": 80.74,
+        "by": "time npm test"
+      }
+    ]
+  },
+  "datasetSha256": "506e05ee9c07966a721715cd7d7b369e72159601b6a6439542330b311ffd66ce",
+  "artifacts": {
+    "data/castle-roulette-master-1350rounds.json": "506e05ee9c07966a721715cd7d7b369e72159601b6a6439542330b311ffd66ce",
+    "outputs/drand-api-verification.json": "cd5554cecdc374480053e2262164b8db22313c9f487a2f73d0df1c4a98ff3f10",
+    "outputs/simulation-results.json": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "outputs/rtp-convergence.html": "e5b14d856f95f97cf16a99cc06c55ac116246d1256cc655276a622fa41c44c0f",
+    "outputs/verification-results.json": "073e9638c29aa57dba00885ec2c55df2741de2341989bbe97d134afc36e1cf33",
+    "outputs/rtp-claim-table.json": "353103828acecf8c6df95113e924777ee89f88a85da71cc15b82eecce4b94c90"
+  },
+  "verdict": "PROVABLY FAIR — Full Pass",
+  "scored": {
+    "passed": 19,
+    "flags": 0,
+    "operatorFlags": 0,
+    "captureFlags": 0,
+    "hardFail": 0,
+    "of": 19
+  },
+  "capturedAt": {
+    "from": "2026-04-22T02:20:49.763Z",
+    "to": "2026-04-23T02:29:27.407Z"
+  },
+  "environment": {
+    "host": "duel.com",
+    "stage": "production",
+    "qualifier": null
+  },
+  "supersedes": "v1.0.0",
+  "signature": "SHA256:gEujiJm2pRyq7lQsfYQfQ1r97H/J7GdaKHbOW8GtikY",
+  "falsifiability": {
+    "registry": "tests/mutations.json",
+    "runner": "scripts/mutate.mjs",
+    "mutations": 31,
+    "killed": 31,
+    "declaredSurvivors": 0,
+    "source": "npm run mutate 2026-10-14 evening (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (31 entries) on the second-pass tree (baseline verify exit 0, mocha exit 0): 31/31 mutations killed; the 31 kills cover 19/19 scored steps; M09 (a win credited at a 0.1% settlement edge) killed by Step 9; no C3 entry (claim kind noted); 2026-10-15 --only M13: 1/1 killed"
+  },
+  "pending": ""
+}

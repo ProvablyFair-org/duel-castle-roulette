@@ -5,3 +5,11 @@ outputs/*.json
 !outputs/rtp-convergence.html
 !outputs/drand-api-verification.json
 .DS_Store
+
+# artifacts of record — the verifier scores a run against these (pinned in src/artifact-pins.ts)
+!outputs/verification-results.json
+!outputs/simulation-results.json
+
+# run products — verify and simulate write here unless PF_EMIT=1; the committed artifacts are pinned
+outputs/run/
+!outputs/rtp-claim-table.json

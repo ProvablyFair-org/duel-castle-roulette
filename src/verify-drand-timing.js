@@ -1,16 +1,19 @@
 const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs');
 
 /**
- * Verify drand commitment timing proof for Castle Roulette.
+ * Check drand timing (bet before beacon) for Castle Roulette.
  *
  * For each round in the dataset, verifies:
  *   1. Chain formula: drandPublishedAt matches quicknet formula
- *   2. Pre-commitment: commitmentBeforeDrand > 0 for all rounds
- *   3. drand API: signature from api.drand.sh matches dataset drandRandomness
+ *   2. Bet before beacon: commitmentBeforeDrand > 0 for all rounds
+ *   3. drand API: signature from drand.cloudflare.com (DRAND_API_BASE) matches dataset drandRandomness
+ *      byte-for-byte — string comparison with the beacon API's response, not BLS verification
  *
- * Both timing endpoints are authoritative:
- *   betPlacedAt = operator's transactions API (signed record)
+ * Timing endpoints:
+ *   betPlacedAt = operator's transactions-API timestamp (the operator's own clock, MANIFEST P5,
+ *                 as recorded by the capture, P1)
  *   drandPublishedAt = quicknet chain formula (verifiable by anyone)
+ * The margin times the bet, not the moment the server seed hash was shown (MANIFEST DL-3).
  *
  * Run: npm run timing (requires internet for drand API calls)
  * Output: outputs/drand-api-verification.json
@@ -51,7 +54,7 @@ async function main() {
   const data = JSON.parse(readFileSync('./data/castle-roulette-master-1350rounds.json', 'utf8'));
   const rounds = data.rounds;
 
-  console.log('=== drand Commitment Timing Verification — Castle Roulette ===\n');
+  console.log('=== drand Timing Verification (bet before beacon) — Castle Roulette ===\n');
   console.log(`Dataset: ${rounds.length} rounds`);
   console.log(`Chain: quicknet (${DRAND_CHAIN_HASH.substring(0, 16)}...)`);
   console.log(`Genesis: ${QUICKNET_GENESIS} | Period: ${QUICKNET_PERIOD}s\n`);
@@ -71,7 +74,7 @@ async function main() {
   console.log(`Chain formula: ${formulaPass}/${rounds.length} match${formulaFail > 0 ? ', ' + formulaFail + ' FAILED' : ''}\n`);
 
   // ── Step 2: Verify commitmentBeforeDrand > 0 for all rounds ──
-  console.log('── Step 2: Pre-Commitment Proof (bet placed before drand published) ──\n');
+  console.log('── Step 2: Bet-Before-Beacon Margin (bet placed before drand published, operator clock) ──\n');
   let positive = 0, nonPositive = 0, nullField = 0;
   let apiSourced = 0, otherSource = 0;
   for (const r of rounds) {
@@ -87,9 +90,9 @@ async function main() {
       console.log(`  FAIL: round ${r.roundId} — commitmentBeforeDrand = ${cbd}ms`);
     }
   }
-  console.log(`Authoritative (transactions-api): ${apiSourced}/${rounds.length}`);
+  console.log(`Server-side (transactions-api):   ${apiSourced}/${rounds.length}`);
   console.log(`Other source:                     ${otherSource}`);
-  console.log(`Positive (pre-commit proven):     ${positive}/${rounds.length}`);
+  console.log(`Positive (bet before beacon):     ${positive}/${rounds.length}`);
   console.log(`Non-positive:                     ${nonPositive}`);
   console.log(`Null/missing:                     ${nullField}`);
 
@@ -156,8 +159,11 @@ async function main() {
   // Save results
   const outputDir = './outputs';
   if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
+  // NO `generatedAt` (removed 2026-09-26, profile CASTLE-27): the file is pinned (src/artifact-pins.ts)
+  // and a fetch timestamp inside it is run metadata. The fetch date of the committed copy is recorded in
+  // MANIFEST.md; a re-fetch prints its own time to the console.
+  console.log(`  fetched at ${new Date().toISOString()}`);
   writeFileSync(`${outputDir}/drand-api-verification.json`, JSON.stringify({
-    generatedAt: new Date().toISOString(),
     chain: DRAND_CHAIN_HASH,
     totalRounds: rounds.length,
     passed: apiPass,
@@ -168,10 +174,10 @@ async function main() {
 
   // ── Summary ──
   console.log('\n══════════════════════════════════════════════');
-  console.log('  TIMING PROOF SUMMARY');
+  console.log('  TIMING SUMMARY');
   console.log('══════════════════════════════════════════════\n');
   console.log(`  Chain formula verified:         ${formulaPass}/${rounds.length}`);
-  console.log(`  Authoritative source rounds:    ${apiSourced}/${rounds.length}`);
+  console.log(`  Server-side source rounds:      ${apiSourced}/${rounds.length}`);
   console.log(`  Bet placed before drand:        ${positive}/${rounds.length}`);
   console.log(`  Minimum margin:                 ${vals[0]}ms (${(vals[0] / 1000).toFixed(3)}s)`);
   console.log(`  drand API signatures matched:   ${apiPass}/${rounds.length}`);
@@ -180,13 +186,17 @@ async function main() {
 
   if (pass) {
     console.log('\n  VERDICT: PASS');
-    console.log('  Every bet was accepted by the operator\'s database');
-    console.log('  before the drand beacon for that round was published. Proven by:');
+    console.log('  Every bet\'s operator timestamp precedes the publication');
+    console.log('  of the drand beacon for that round. Measured from:');
     console.log('  1. betPlacedAt: timestamp_raw from /api/v2/user/transactions?type=roulette');
     console.log('  2. drandPublishedAt: computed locally from chain formula (genesis + (round-1) × 3s)');
     console.log('  3. commitmentBeforeDrand = drandPublishedAt × 1000 − betPlacedAt (ms)');
     console.log('  4. All ' + rounds.length + ' values are positive (min ' + vals[0] + 'ms, median ' + vals[Math.floor(vals.length / 2)] + 'ms)');
-    console.log('  5. All ' + rounds.length + ' drand signatures matched byte-for-byte against api.drand.sh');
+    console.log('  5. All ' + rounds.length + ' drand signatures matched byte-for-byte against drand.cloudflare.com');
+    console.log('  Items 1, 3 and 4 rest on the operator\'s own clock (MANIFEST P5) and on the capture');
+    console.log('  being a faithful record (P1); they time the bet, not when the server seed hash was');
+    console.log('  shown (DL-3). Item 2 is public. Item 5 compares the beacon values with the public');
+    console.log('  chain\'s by string equality; it does not time anything.');
   } else {
     console.log('\n  VERDICT: FAIL — see details above');
     process.exitCode = 1;

@@ -146,7 +146,7 @@ describe('Payout Table Integrity — validates the hardcoded position-to-color m
     }
   });
 
-  it('every tier has EV = 1.000 (zero edge by construction)', () => {
+  it('every tier has EV = 1.000 — the baseline RTP the paytable enforces', () => {
     const tiers = [
       { count: 1, mult: 48 },
       { count: 2, mult: 24 },
@@ -191,5 +191,53 @@ describe('Statistics', () => {
     const data = Array.from({ length: 1000 }, () => { x = (x * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff; });
     const r = lag1Autocorrelation(data);
     assert.ok(Math.abs(r) < 0.1, `expected near-zero autocorrelation, got ${r}`);
+  });
+});
+
+// ── The operator's own Verify-tab code (profile CASTLE-09) ────────────────────
+describe('Operator source — Duel\'s own Castle Roulette Verify-tab code, executed with only its inputs filled in (pasted 2026-09-26)', function () {
+  this.timeout(300_000);
+  // duel.com → Provably Fair → Verify (Castle Roulette) code panel, pasted by Paulo 2026-09-26, saved verbatim (src/operator-verifier.ts)
+  const { runOperatorVerifier, checkOperatorCites, operatorPosition, OPERATOR_VERIFIER_PINS, OPERATOR_VERIFIER_FILE, OPERATOR_EXPECTED_LOGS } =
+    require('../../src/operator-verifier') as typeof import('../../src/operator-verifier');
+  const ds = loadDataset();
+  const KNOWN = [
+    { serverSeed: 'adace83dfe4957273152c5c52aea5e4fc112dabef87ff4baa350ca652420eb26', drand: '8d59f6f2c17c6c3a77f65dfc4b5530bb607c8891d21a90cdff2628d69a461ca692b6ad3c041e1c7a8a9d87005cd6621d', expectedPosition: 27 },
+    { serverSeed: '1120be12acd15f7649d79ebda52412ff000667166d49c100f2af329e06833c6b', drand: '865322eddc7b7ec1ad777a3456f4c5bd51b07b9844fc55ae9b1d49d17c9e71a97e73d4af929d6e9536eb387fd455df57', expectedPosition: 16 },
+  ];
+  const known = KNOWN.map((v, i) => ({ id: `known${i}`, inputs: { serverSeed: v.serverSeed, drandSeed: v.drand } }));
+  const captured = ds.rounds.map((r, i) => ({ id: `r${i}`, inputs: { serverSeed: r.result.serverSeed, drandSeed: r.result.drandRandomness } }));
+  const run = runOperatorVerifier([...known, ...captured]);
+
+  it('the vendored operator file and its runner hash to their pins, the code ran, and as shipped it printed only its empty-input message', () => {
+    assert.deepStrictEqual(run.files.map(f => f.match), [true, true]);
+    assert.strictEqual(run.files[0].file, OPERATOR_VERIFIER_FILE);
+    assert.strictEqual(run.files[0].actual, OPERATOR_VERIFIER_PINS[OPERATOR_VERIFIER_FILE]);
+    assert.strictEqual(run.error, null);
+    assert.deepStrictEqual(run.shippedLogs, [...OPERATOR_EXPECTED_LOGS]);
+  });
+
+  it('every operator line src/rng.ts cites carries the quoted text verbatim', () => {
+    const c = checkOperatorCites();
+    assert.deepStrictEqual(c.bad, []);
+    assert.ok(c.checked > 0);
+  });
+
+  it('fixed vectors: the operator code returns and prints the known positions', () => {
+    KNOWN.forEach((v, i) => {
+      const o = run.results!.get(`known${i}`)!;
+      assert.strictEqual(o.value, String(v.expectedPosition));
+      assert.deepStrictEqual(o.logs, [`Roll result: ${v.expectedPosition}`]);
+    });
+  });
+
+  it('every captured round: the operator position equals the served position and src/rng.ts (1,350/1,350)', () => {
+    let agree = 0;
+    ds.rounds.forEach((r, i) => {
+      const p = operatorPosition(run.results!.get(`r${i}`)!.value);
+      if (p !== null && p === r.result.position && p === computePosition(r.result.serverSeed, r.result.drandRandomness)) agree++;
+    });
+    assert.strictEqual(ds.rounds.length, 1350);
+    assert.strictEqual(agree, 1350);
   });
 });
