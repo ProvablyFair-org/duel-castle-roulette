@@ -27,12 +27,12 @@ const DECLARED = {
   auditId: 'PF-2026-DL07',
   game: 'castle-roulette',
   casino: 'duel',
-  release: 'v1.1.0',
+  release: 'v1.2.0',
   framework: '1.1',
   environmentHost: 'duel.com',
   environmentStage: 'production',
   environmentQualifier: null,
-  supersedes: 'v1.0.0',
+  supersedes: 'v1.1.0',
   signature: 'SHA256:gEujiJm2pRyq7lQsfYQfQ1r97H/J7GdaKHbOW8GtikY',
   pending: '',
 };
@@ -67,7 +67,7 @@ function captureWindow(dataset) {
 /** The falsifiability battery. `mutations` is computed from the registry; the RUN RESULT is DECLARED
  * from the last completed `npm run mutate` (cite it in `source`) and must be refreshed by re-running
  * the battery — a generator never asserts a kill it did not run. null = not run for this manifest. */
-const FALSIFIABILITY_DECLARED = { killed: 31, declaredSurvivors: 0, source: 'npm run mutate 2026-10-14 evening (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (31 entries) on the second-pass tree (baseline verify exit 0, mocha exit 0): 31/31 mutations killed; the 31 kills cover 19/19 scored steps; M09 (a win credited at a 0.1% settlement edge) killed by Step 9; no C3 entry (claim kind noted); 2026-10-15 --only M13: 1/1 killed' };
+const FALSIFIABILITY_DECLARED = { killed: 30, declaredSurvivors: 0, source: 'npm run mutate 2026-10-20 (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (30 entries; M05i retired with the src/rng.ts citation table) on the clean-room tree before the README/MANIFEST wording edits (baseline verify exit 0, mocha exit 0): 30/30 mutations killed; the 30 kills cover 19/19 scored steps; M05d retargeted to the rebuilt module (DRAW_HEX_CHARS) and killed by Step 5' };
 
 /** How long `npm test` takes, and on what — a property of the machine, so DECLARED from measured runs. */
 const RUNTIME = {

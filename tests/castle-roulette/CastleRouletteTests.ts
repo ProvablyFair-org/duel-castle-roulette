@@ -195,15 +195,19 @@ describe('Statistics', () => {
 });
 
 // ── The operator's own Verify-tab code (profile CASTLE-09) ────────────────────
-describe('Operator source — Duel\'s own Castle Roulette Verify-tab code, executed with only its inputs filled in (pasted 2026-09-26)', function () {
+describe('Second check — Duel\'s own Castle Roulette Verify-tab code, executed with only its inputs filled in (pasted 2026-09-26)', function () {
   this.timeout(300_000);
+  // Not the source of src/rng.ts: that is rebuilt from docs/ALGORITHM.md. Duel's code is run as a cross-check.
   // duel.com → Provably Fair → Verify (Castle Roulette) code panel, pasted by Paulo 2026-09-26, saved verbatim (src/operator-verifier.ts)
-  const { runOperatorVerifier, checkOperatorCites, operatorPosition, OPERATOR_VERIFIER_PINS, OPERATOR_VERIFIER_FILE, OPERATOR_EXPECTED_LOGS } =
+  const { runOperatorVerifier, operatorPosition, OPERATOR_VERIFIER_PINS, OPERATOR_VERIFIER_FILE, OPERATOR_EXPECTED_LOGS } =
     require('../../src/operator-verifier') as typeof import('../../src/operator-verifier');
   const ds = loadDataset();
   const KNOWN = [
     { serverSeed: 'adace83dfe4957273152c5c52aea5e4fc112dabef87ff4baa350ca652420eb26', drand: '8d59f6f2c17c6c3a77f65dfc4b5530bb607c8891d21a90cdff2628d69a461ca692b6ad3c041e1c7a8a9d87005cd6621d', expectedPosition: 27 },
     { serverSeed: '1120be12acd15f7649d79ebda52412ff000667166d49c100f2af329e06833c6b', drand: '865322eddc7b7ec1ad777a3456f4c5bd51b07b9844fc55ae9b1d49d17c9e71a97e73d4af929d6e9536eb387fd455df57', expectedPosition: 16 },
+    // docs/ALGORITHM.md §5.3 rejection probe (open point O2): its first 4-byte chunk is 4294967284, in the top 16
+    // values of 2^32. Plain mod 48 gives 4, a rejection draw 41. Duel's code returns 4, as src/rng.ts does.
+    { serverSeed: '00000000000000000000000000000000000000000000000000000000161fff60', drand: '8d59f6f2c17c6c3a77f65dfc4b5530bb607c8891d21a90cdff2628d69a461ca692b6ad3c041e1c7a8a9d87005cd6621d', expectedPosition: 4 },
   ];
   const known = KNOWN.map((v, i) => ({ id: `known${i}`, inputs: { serverSeed: v.serverSeed, drandSeed: v.drand } }));
   const captured = ds.rounds.map((r, i) => ({ id: `r${i}`, inputs: { serverSeed: r.result.serverSeed, drandSeed: r.result.drandRandomness } }));
@@ -217,17 +221,12 @@ describe('Operator source — Duel\'s own Castle Roulette Verify-tab code, execu
     assert.deepStrictEqual(run.shippedLogs, [...OPERATOR_EXPECTED_LOGS]);
   });
 
-  it('every operator line src/rng.ts cites carries the quoted text verbatim', () => {
-    const c = checkOperatorCites();
-    assert.deepStrictEqual(c.bad, []);
-    assert.ok(c.checked > 0);
-  });
-
   it('fixed vectors: the operator code returns and prints the known positions', () => {
     KNOWN.forEach((v, i) => {
       const o = run.results!.get(`known${i}`)!;
       assert.strictEqual(o.value, String(v.expectedPosition));
       assert.deepStrictEqual(o.logs, [`Roll result: ${v.expectedPosition}`]);
+      assert.strictEqual(computePosition(v.serverSeed, v.drand), v.expectedPosition);
     });
   });
 

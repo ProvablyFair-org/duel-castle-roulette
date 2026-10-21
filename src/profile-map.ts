@@ -60,7 +60,7 @@ export const STEP_CLAIMS: Record<number, StepClaims> = {
     { id: 'CASTLE-08', coverage: 'full',
       note: 'added 2026-09-26 (rule R1, integer draw): the draw is one uint32 reduced by a plain % 48 with NO rejection, so it is '
         + 'not exactly uniform — 2^32 = 48 × 89,478,485 + 16, positions 0–15 carry one extra value. The bound is computed from '
-        + 'the domain src/rng.ts positionFromDigest actually reads (DRAW_HEX_CHARS = 8, confirmed by ~300 probes built so a '
+        + 'the domain src/rng.ts positionFromDigest actually reads (src/bias.ts; DRAW_HEX_CHARS = 8, confirmed by ~300 probes built so a '
         + 'wider or narrower read disagrees): per-position absolute bias 1.552e-10, at or under the 2^-32 = 2.328e-10 ceiling '
         + '(relative 1.118e-8); largest per-tier EV effect 7.451e-9 (Green, player-favourable), printed with every tier in the '
         + 'data block and disclosed as MANIFEST DL-2. HARD FAIL above the ceiling. FAIL probed (the read narrowed to 6 hex '
@@ -99,7 +99,7 @@ export const STEP_CLAIMS: Record<number, StepClaims> = {
     { id: 'CASTLE-13', coverage: 'full',
       note: 'hardened 2026-09-26: the served 18-dp `multiplier` string must equal the declared table\'s multiplier at the '
         + 'recomputed position EXACTLY (parsed as an exact decimal, no tolerance) on every round; the table\'s origin is '
-        + 'declared (src/rng.ts PAYOUT_TABLE, from Duel\'s published verification code) and matched against the site '
+        + 'declared (src/rng.ts PAYOUT_TABLE, rebuilt from docs/ALGORITHM.md §3.1: Duel\'s game-page tiers and the live rounds) and matched against the site '
         + 'verifier\'s table in Step 5. FAIL probed (one served multiplier changed, dataset re-pinned)' },
     { id: 'CASTLE-14', coverage: 'full',
       note: 'served half: every served multiplier is a declared tier value at its position; the tier identity (count × '
@@ -210,19 +210,26 @@ export const NOT_APPLICABLE: Array<{ id: string; reason: string }> = [
 ];
 
 export const PACKAGE_CHECKS: Array<{ id: string; artifact: string; coverage: Coverage | 'none'; note: string }> = [
-  { id: 'CASTLE-09', artifact: 'tests/castle-roulette/CastleRouletteTests.ts (Operator source block) + src/rng.ts OPERATOR_SOURCE_CITES + src/operator-verifier.ts + Step 5', coverage: 'full',
-    note: 'CLOSED 2026-09-26 (was partial: Duel\'s Castle Roulette Verify-tab code was not in the workspace). Duel\'s own Castle '
-      + 'Roulette Verify-tab code, pasted by Paulo from duel.com Verify tab 2026-09-26, is vendored verbatim at '
+  { id: 'CASTLE-09', artifact: 'docs/ALGORITHM.md + tests/castle-roulette/RngSpecTests.ts + tests/castle-roulette/CastleRouletteTests.ts (Second check block) + src/operator-verifier.ts + Step 5', coverage: 'full',
+    note: 'REWRITTEN 2026-10-20 (v1.2.0). src/rng.ts is rebuilt from a written specification, docs/ALGORITHM.md '
+      + '(framework games/castle-roulette/ALGORITHM.md, commit 2dbffe4), by an implementer who never opened Duel\'s code; Duel\'s '
+      + 'published Verify-tab code is run as a second check, not used as the source. Through v1.1.0 src/rng.ts was a port of that '
+      + 'code and cited 8 of its lines (OPERATOR_SOURCE_CITES); the port and the citation table are gone. Duel\'s Castle Roulette '
+      + 'Verify-tab code, pasted by Paulo from duel.com Verify tab 2026-09-26, is vendored verbatim at '
       + 'evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js (E09, SHA-256 c83dca21…, never edited) and pinned with its '
-      + 'runner in src/operator-verifier.ts. The asserts, each met: (1) "unit tests reproduce at least one captured round … against the '
-      + 'operator\'s published algorithm" — the Operator source block in tests/castle-roulette/CastleRouletteTests.ts EXECUTES the pinned '
+      + 'runner in src/operator-verifier.ts. The asserts: (1) "unit tests reproduce at least one captured round … against the '
+      + 'operator\'s published algorithm" — the Second check block in tests/castle-roulette/CastleRouletteTests.ts EXECUTES the pinned '
       + 'file with only its two "User input values" filled in (serverSeed, drandSeed = the captured drandRandomness hex) on all 1,350 '
-      + 'captured rounds: its value % 48 position equals the served position and src/rng.ts on 1,350/1,350; (2) "fixed vectors" — two '
-      + 'known rounds (27, 16) through the same file, returned and printed; (3) "the adapter cites the operator source line it ports" — '
-      + 'src/rng.ts OPERATOR_SOURCE_CITES names 8 lines of the pinned file, each checked verbatim (8/8). Step 5 runs the same execution in '
+      + 'captured rounds: its value % 48 position equals the served position and src/rng.ts on 1,350/1,350; (2) "fixed vectors" — three '
+      + 'vectors (27, 16, and the spec\'s §5.3 probe, whose first uint32 lies in the top 16 values of 2^32: plain % 48 gives 4, a '
+      + 'rejection draw 41; the file returns 4, as src/rng.ts does) through the same file, returned and printed, and '
+      + 'tests/castle-roulette/RngSpecTests.ts runs the spec\'s own vectors and properties against src/rng.ts (119/119); (3) "the adapter '
+      + 'cites the operator source line it ports" — superseded for this package by the 20 Oct 2026 rule that RNG code is rebuilt from a '
+      + 'written spec: nothing is ported, so no operator line is cited; docs/ALGORITHM.md §4 names the source of every step instead '
+      + '(Duel\'s public pages, the standard construction, the drand beacon or the 1,350 live rounds). Step 5 runs the same execution in '
       + 'the verifier. The earlier unit tests stay (5 known-answer rounds, negative controls, full recompute, the 48-entry table). FAIL '
       + 'probed: M05e (a line of the file changed AND re-pinned), M05f (file byte, no re-pin), M05g (runner byte, no re-pin), M05h (runner '
-      + 'forged AND re-pinned), M05i (a citation moved). Not established: that the Verify button, or Duel\'s server, runs exactly this code' },
+      + 'forged AND re-pinned). Not established: that the Verify button, or Duel\'s server, runs exactly this code' },
   { id: 'CASTLE-23', artifact: 'MANIFEST.md#verification-results', coverage: 'full',
     note: 'restated 2026-09-26 as the framework rows S5-1 … S5-8 between S5-MATRIX markers, each tied to a scored step or '
       + 'marked n/a / Not tested with the reason; the package\'s former S1–S10 table follows as supplementary rows' },
@@ -246,7 +253,8 @@ export const PACKAGE_CHECKS: Array<{ id: string; artifact: string; coverage: Cov
       + 'that edit a pinned artifact AND re-pin it (M14, M15, M16) and a site-verifier forgery re-pinned (M05c). Measured '
       + '2026-09-26: 22/22 killed, 18/18 scored steps covered; re-run after Step 19 and M14b/M14c/M18b/M19 were added: 26/26 killed, '
       + '19/19 scored steps covered; re-run after Duel\'s Verify-tab code was wired into Step 5 (M05e–M05i: operator file forged AND '
-      + 're-pinned, file and runner edited without re-pin, runner forged AND re-pinned, a citation moved): 31/31 killed, 19/19 covered; '
+      + 're-pinned, file and runner edited without re-pin, runner forged AND re-pinned, a citation moved): 31/31 killed, 19/19 covered '
+      + '(M05i, the moved citation, was retired on 2026-10-20 with the src/rng.ts citation table, leaving 30 entries); '
       + 're-run 2026-10-04 after M09 was replaced by a settlement-edge forgery (a win credited at a 0.1% edge) and the disposable copy '
       + 'was given outputs/rtp-claim-table.json (without it the copy\'s baseline was not green): 31/31 killed, 19/19 covered. A first draft of M12 edited src/loader.ts DRAND_PERIOD and '
       + 'SURVIVED — that constant is dead code (Step 12 uses its own QUICKNET_PERIOD in tests/steps/dataset.ts:13); M12 now '

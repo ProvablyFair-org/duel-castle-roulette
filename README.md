@@ -1,6 +1,6 @@
 # Duel Castle Roulette — Provably Fair Audit
 
-**Auditor:** [ProvablyFair.org](https://www.provablyfair.org) · **Audit ID:** PF-2026-DL07 · **Release:** `v1.1.0` · **Capture:** 22–23 April 2026
+**Auditor:** [ProvablyFair.org](https://www.provablyfair.org) · **Audit ID:** PF-2026-DL07 · **Release:** `v1.2.0` · **Capture:** 22–23 April 2026
 
 **Result: PROVABLY FAIR — Full Pass.** Every wheel position in the 1,350-round dataset was reproduced from the revealed server seed and the drand quicknet beacon. The verifier reports 19 of 19 scored steps passing, no flags and no hard failures. All 1,350 drand signatures equal the values the public beacon API returned for their rounds.
 
@@ -10,7 +10,7 @@
 
 | Check | Captured evidence |
 |---|---|
-| Positions | 1,350 of 1,350 wheel positions recomputed from `(serverSeed, drandRandomness)`; 0 mismatches. The position code (`src/rng.ts`) was ported from Duel's published verification code and is checked against its Verify-tab code (Step 5); it is not a rebuild written from a specification |
+| Positions | 1,350 of 1,350 wheel positions recomputed from `(serverSeed, drandRandomness)`; 0 mismatches. The position code (`src/rng.ts`) was rebuilt from a written specification ([docs/ALGORITHM.md](docs/ALGORITHM.md)) by an implementer who never opened Duel's code; Duel's published Verify-tab code is run as a second check, not used as the source (Step 5) |
 | Payouts | 1,350 of 1,350 payouts match the position → tier table; the capture-recorded `isWin` flags agree with it |
 | Commitments | 1,350 distinct server seeds, each hashing to its own commitment; one seed per round |
 | drand beacon | 1,350/1,350 signatures matched byte for byte against drand.cloudflare.com; publication times follow the quicknet chain formula |
@@ -19,7 +19,7 @@
 | Baseline RTP | 100.0000% from the wheel geometry alone; per-tier deviation from the plain `% 48` reduction at most 7.451e-9 |
 | Settlement edge | 473 of 473 winning rounds credited stake × table multiplier exactly at 18 dp, from the served credit and stake: a settlement edge of 0 at the captured stakes |
 | Simulation | 5,000,000 Pass 1 rounds (Fisher's T = 15.09, p = 0.7712) and 1,350 casino seeds × 1,000 beacon values in Pass 2 |
-| Player verification | Duel's own Verify-tab code and the ProvablyFair.org docs-site verifier reproduce all 1,350 positions |
+| Player verification | Duel's own Verify-tab code (the second check) and the ProvablyFair.org docs-site verifier reproduce all 1,350 positions |
 
 The bet-before-beacon ordering rests on the operator's own bet timestamp, and the server-seed hash was not preserved as a timed pre-round observation. Increasing drand round IDs show ordering only; advance beacon selection (the server choosing which later beacon a round uses) was not verified. These boundaries, the single test account and the operator-tunable settlement parameters are set out in the [overview's limitations](MANIFEST.md#limitations-and-trust).
 
@@ -54,7 +54,8 @@ There are two documentation files: this README and [MANIFEST.md — consolidated
 
 - [Captured rounds](data/castle-roulette-master-1350rounds.json) — SHA-256 `506e05ee9c07966a721715cd7d7b369e72159601b6a6439542330b311ffd66ce`.
 - [Verification results](outputs/verification-results.json), [RTP claim table](outputs/rtp-claim-table.json), [simulation results](outputs/simulation-results.json), [drand API check](outputs/drand-api-verification.json) and [release manifest](RELEASE-MANIFEST.json).
-- [Duel's Verify-tab code](evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js) — SHA-256 `c83dca216f2d79aee3f8d60fa663528a9b6298a157d0851450c0f31c5de92bc7`.
+- [Algorithm specification](docs/ALGORITHM.md) — the written specification `src/rng.ts` is rebuilt from.
+- [Duel's Verify-tab code](evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js) (the second check) — SHA-256 `c83dca216f2d79aee3f8d60fa663528a9b6298a157d0851450c0f31c5de92bc7`.
 - [Audit report](https://audit.provablyfair.org/casino/duel/games/castle-roulette/overview) · [Public repository](https://github.com/ProvablyFair-org/duel-castle-roulette) · [MIT license](LICENSE).
 
 The release manifest records the fingerprint of the ProvablyFair.org signing key (`signature`). The consolidation of the documentation is recorded in the [release history](MANIFEST.md#release-history).

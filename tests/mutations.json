@@ -82,8 +82,8 @@
   "expect": "exceeds the 2^-32 ceiling",
   "guard": "CASTLE-08: the bias bound is computed from the domain the draw reads.",
   "file": "src/rng.ts",
-  "find": "export const DRAW_HEX_CHARS = 8;",
-  "replace": "export const DRAW_HEX_CHARS = 6;",
+  "find": "export const DRAW_HEX_CHARS: number = 8;",
+  "replace": "export const DRAW_HEX_CHARS: number = 6;",
   "runner": "verify"
  },
  {
@@ -91,7 +91,7 @@
   "step": 5,
   "runner": "verify",
   "expect": "OPERATOR VERIFY-TAB CODE PARITY (CASTLE-09)",
-  "guard": "CASTLE-09: forged evidence — Duel's vendored Castle Roulette Verify-tab code is changed on an uncited line AND its SHA-256 pin re-computed, so the hash check accepts it; executing it on every round must expose it.",
+  "guard": "CASTLE-09: forged evidence — Duel's vendored Castle Roulette Verify-tab code is changed on a logic line AND its SHA-256 pin re-computed, so the hash check accepts it; executing it on every round must expose it.",
   "edits": [
    {
     "file": "evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js",
@@ -147,16 +147,6 @@
     "hashOf": "verifier-parity/operator/run-operator-verifier.cjs"
    }
   ]
- },
- {
-  "name": "M05i src/rng.ts cites an operator line that does not carry the quoted text",
-  "step": 5,
-  "runner": "verify",
-  "expect": "src/rng.ts operator citations",
-  "guard": "CASTLE-09: every citation in src/rng.ts OPERATOR_SOURCE_CITES must quote the pinned operator file at the line it names.",
-  "file": "src/rng.ts",
-  "find": "{ line: 62, text: 'return (value % RANGE).toString();'",
-  "replace": "{ line: 61, text: 'return (value % RANGE).toString();'"
  },
  {
   "name": "M06 a Phase C round's beacon value swapped",

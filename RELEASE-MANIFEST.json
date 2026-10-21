@@ -2,7 +2,7 @@
   "auditId": "PF-2026-DL07",
   "game": "castle-roulette",
   "casino": "duel",
-  "release": "v1.1.0",
+  "release": "v1.2.0",
   "framework": "1.1",
   "simulation": {
     "seeding": "pinned",
@@ -28,8 +28,8 @@
     "outputs/drand-api-verification.json": "cd5554cecdc374480053e2262164b8db22313c9f487a2f73d0df1c4a98ff3f10",
     "outputs/simulation-results.json": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
     "outputs/rtp-convergence.html": "e5b14d856f95f97cf16a99cc06c55ac116246d1256cc655276a622fa41c44c0f",
-    "outputs/verification-results.json": "073e9638c29aa57dba00885ec2c55df2741de2341989bbe97d134afc36e1cf33",
-    "outputs/rtp-claim-table.json": "353103828acecf8c6df95113e924777ee89f88a85da71cc15b82eecce4b94c90"
+    "outputs/verification-results.json": "82800394b4b4ecb8ad96029476998daec0c297b6ed5979752cea3d8ea3a6967d",
+    "outputs/rtp-claim-table.json": "d633c433749651e9995526cdd8091bf053695da17c73a037a6a1a19b696446f8"
   },
   "verdict": "PROVABLY FAIR — Full Pass",
   "scored": {
@@ -49,15 +49,15 @@
     "stage": "production",
     "qualifier": null
   },
-  "supersedes": "v1.0.0",
+  "supersedes": "v1.1.0",
   "signature": "SHA256:gEujiJm2pRyq7lQsfYQfQ1r97H/J7GdaKHbOW8GtikY",
   "falsifiability": {
     "registry": "tests/mutations.json",
     "runner": "scripts/mutate.mjs",
-    "mutations": 31,
-    "killed": 31,
+    "mutations": 30,
+    "killed": 30,
     "declaredSurvivors": 0,
-    "source": "npm run mutate 2026-10-14 evening (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (31 entries) on the second-pass tree (baseline verify exit 0, mocha exit 0): 31/31 mutations killed; the 31 kills cover 19/19 scored steps; M09 (a win credited at a 0.1% settlement edge) killed by Step 9; no C3 entry (claim kind noted); 2026-10-15 --only M13: 1/1 killed"
+    "source": "npm run mutate 2026-10-20 (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (30 entries; M05i retired with the src/rng.ts citation table) on the clean-room tree before the README/MANIFEST wording edits (baseline verify exit 0, mocha exit 0): 30/30 mutations killed; the 30 kills cover 19/19 scored steps; M05d retargeted to the rebuilt module (DRAW_HEX_CHARS) and killed by Step 5"
   },
   "pending": ""
 }

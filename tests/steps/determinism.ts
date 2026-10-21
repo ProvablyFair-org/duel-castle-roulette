@@ -4,10 +4,11 @@
  *   6. Bet-Size Invariance — Phase C ($1) positions recompute identically
  */
 
-import { computePosition, getResult, drawBiasBound, PAYOUT_TABLE } from '../../src/rng';
+import { computePosition, getResult, PAYOUT_TABLE } from '../../src/rng';
+import { drawBiasBound } from '../../src/bias';
 import { loadSiteVerifier, SITE_VERIFIER_PROVENANCE } from '../../src/site-verifier';
 import {
-  runOperatorVerifier, checkOperatorCites, operatorPosition, OPERATOR_EXPECTED_LOGS, OPERATOR_VERIFIER_PROVENANCE,
+  runOperatorVerifier, operatorPosition, OPERATOR_EXPECTED_LOGS, OPERATOR_VERIFIER_PROVENANCE,
 } from '../../src/operator-verifier';
 
 /** The profile's ceiling on per-outcome draw bias (CASTLE-08, rule R1): one part in 2^32. */
@@ -47,7 +48,7 @@ export function run(ctx: VerifyContext): StepResult[] {
     // ── Second leg: draw bias bound (CASTLE-08, rule R1 — added 2026-09-26) ────────────────
     // The draw is ONE uint32 reduced by a plain `% 48`, with no rejection, so it is not exactly
     // uniform. HARD FAIL unless the per-position absolute bias, computed from the domain the draw
-    // actually reads (src/rng.ts positionFromDigest, probed), is at or under the 2^-32 ceiling. The
+    // actually reads (src/bias.ts probing src/rng.ts positionFromDigest), is at or under the 2^-32 ceiling. The
     // RTP effect per tier is printed and disclosed (MANIFEST DL-2), never assumed away.
     const bb = drawBiasBound();
     if (bb.predicateProbeFailures > 0) issues.push(`positionFromDigest disagrees with "leading 8 hex digits mod 48" on ${bb.predicateProbeFailures} probe(s)`);
@@ -83,16 +84,17 @@ export function run(ctx: VerifyContext): StepResult[] {
     if (siteMismatches > 0) issues.push(`site verifier disagrees on ${siteMismatches} round(s): ${siteList.join('; ')}`);
 
     // ── Fourth leg: THE OPERATOR'S OWN Verify-tab code (CASTLE-09 — added 2026-09-26) ──────────
-    // Duel's Castle Roulette code panel, pasted by Paulo from the Verify tab on 2026-09-26, vendored
+    // A SECOND CHECK, not the source: src/rng.ts is rebuilt from docs/ALGORITHM.md by an implementer who
+    // never opened Duel's code (since 20 Oct 2026, v1.2.0). Duel's Castle Roulette code panel, pasted by
+    // Paulo from the Verify tab on 2026-09-26, vendored
     // verbatim under evidence/verify-tab/ and pinned in src/operator-verifier.ts. The pinned runner fills
     // in the file's two "User input values" (serverSeed, drandSeed = the captured drandRandomness hex)
     // and runs it. Its validateRouletteResult returns the position as a string; it must be exactly
     // String(n) for n in 0..47, equal the served position AND src/rng.ts's, and the line it prints must
-    // equal what it returned. HARD FAIL otherwise, on a pin mismatch, on a count other than
-    // EXPECTED_ROUNDS, or on a citation that does not carry its text.
+    // equal what it returned. HARD FAIL otherwise, on a pin mismatch, or on a count other than
+    // EXPECTED_ROUNDS.
     const opIssues: string[] = [];
     const op = runOperatorVerifier(rounds.map((r, i) => ({ id: String(i), inputs: { serverSeed: r.result.serverSeed, drandSeed: r.result.drandRandomness } })));
-    const opCites = checkOperatorCites();
     let opChecked = 0, opVsServed = 0, opVsRng = 0, opOffGrid = 0, opPrinted = 0, opErrors = 0;
     const opFirst: string[] = [];
     if (!op.results) {
@@ -119,7 +121,6 @@ export function run(ctx: VerifyContext): StepResult[] {
           + `not a 0..47 integer string on ${opOffGrid}, ${opErrors} run error(s), printed ≠ returned on ${opChecked - opErrors - opPrinted} (${opFirst.join('; ')})`);
       }
     }
-    if (opCites.bad.length > 0 || opCites.checked === 0) opIssues.push(`src/rng.ts operator citations: ${opCites.bad.slice(0, 2).join('; ')}`);
     if (opIssues.length > 0) issues.push(`OPERATOR VERIFY-TAB CODE PARITY (CASTLE-09): ${opIssues.join('; ')}`);
 
     const ok = issues.length === 0;
@@ -135,12 +136,11 @@ export function run(ctx: VerifyContext): StepResult[] {
           + `${bb.maxEvDeviation.toExponential(3)} (per-tier figures in this step's data block; disclosed, MANIFEST DL-2). Player-verifier parity (CASTLE-24): `
           + `the ProvablyFair.org docs-site derive.js (pinned, ${SITE_VERIFIER_PROVENANCE.ref} @ ${SITE_VERIFIER_PROVENANCE.head.slice(0, 7)}) executed on `
           + `${siteCompared}/${EXPECTED_ROUNDS} rounds — position, colour and multiplier agree with src/rng.ts and the served winning tier on every round; its PAYOUT_TABLE equals src/rng.ts. `
-          + `Operator-code parity (CASTLE-09): Duel's own Castle Roulette Verify-tab code (${OPERATOR_VERIFIER_PROVENANCE.savedAs}, `
+          + `Second check (CASTLE-09; src/rng.ts is rebuilt from docs/ALGORITHM.md, not from this code): Duel's own Castle Roulette Verify-tab code (${OPERATOR_VERIFIER_PROVENANCE.savedAs}, `
           + `${OPERATOR_VERIFIER_PROVENANCE.from}, SHA-256 ${OPERATOR_VERIFIER_PROVENANCE.sha256.slice(0, 16)}…, pinned) executed with only its two `
           + `"User input values" filled in (serverSeed, drandSeed = the captured drandRandomness hex) on ${opChecked}/${EXPECTED_ROUNDS} rounds — `
           + `its value % 48 position equals the served position and src/rng.ts on every round (${opVsServed} / ${opVsRng} differ, ${opOffGrid} not a `
-          + `0..47 integer string), printed = returned on ${opPrinted}/${opChecked}, operator lines cited by src/rng.ts `
-          + `${opCites.checked - opCites.bad.length}/${opCites.checked} verbatim`
+          + `0..47 integer string), printed = returned on ${opPrinted}/${opChecked}`
         : `STEP 5 FAILED: ${issues.join('; ')}`,
       data: {
         recomputed: match, mismatched: mismatch, expected: EXPECTED_ROUNDS,
@@ -149,8 +149,7 @@ export function run(ctx: VerifyContext): StepResult[] {
         operatorVerifier: {
           files: op.files.map(f => ({ file: f.file, pinnedSha256: f.pinned, actualSha256: f.actual, match: f.match })),
           provenance: OPERATOR_VERIFIER_PROVENANCE, roundsExecuted: opChecked, differsFromServed: opVsServed, differsFromRng: opVsRng,
-          notAPosition: opOffGrid, printedEqualsReturned: opPrinted, errors: opErrors,
-          citesChecked: opCites.checked, citesBad: opCites.bad.length, issues: opIssues,
+          notAPosition: opOffGrid, printedEqualsReturned: opPrinted, errors: opErrors, issues: opIssues,
         },
       },
     });

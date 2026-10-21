@@ -10,7 +10,7 @@
  *  1. WHEEL POSITIONS vs the 48-position wheel, one χ² (df 47) on the served result.position of every
  *     round (Step 5 proves it equals the recomputation). Expected counts use the EXACT per-position
  *     probability of the declared reduction (leading uint32 mod 48: positions 0–15 receive one extra value
- *     of 2^32 — src/rng.ts drawBiasBound), not 1/48.
+ *     of 2^32 — src/bias.ts drawBiasBound, over src/rng.ts positionFromDigest), not 1/48.
  *  2. WIN RATES per coin tier vs the binomial: the rounds that bet on each tier, P(win) = the exact
  *     probability mass of that tier's positions under the same reduction; two-sided exact binomial.
  *

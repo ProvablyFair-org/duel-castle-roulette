@@ -32,7 +32,7 @@ import { RANGE, PAYOUT_TABLE, DRAW_HEX_CHARS } from './rng';
 
 export const RTP_CLAIM: RtpClaim = {
   kind: 'noted',
-  source: 'game page: Duel\'s Zero Edge allowance as disclosed by Duel engineering and reflected live in the game UI (MANIFEST.md#payouts-and-rtp); game settings: GET /api/v2/metadata/roulette (E10, fetched 2026-10-05) states the settlement edge beyond the allowance, min_house_edge_limit 0.1 and max_house_edge_limit 5 (%), which no captured stake reached (DL-5)',
+  source: 'game page: the "Zero Edge" label on the Castle Roulette screen (E05, evidence/E01-castle-roulette-game-ui.png); the allowance ceilings ($1,000 per bet, $50,000 per 24 h) are Duel engineering\'s verbal disclosure and are not in E10 (MANIFEST.md#payouts-and-rtp); game settings: GET /api/v2/metadata/roulette (E10, fetched 2026-10-05) states the settlement edge beyond the allowance, min_house_edge_limit 0.1 and max_house_edge_limit 5 (%), which no captured stake reached (DL-5)',
   text: 'Zero Edge: no settlement edge on up to $1,000 of a bet, within $50,000 of wager per 24 hours; served credit = stake × table multiplier on all 473 winning rounds captured (Step 9)',
 };
 
@@ -41,7 +41,7 @@ export const RTP_CLAIM_STEP = 13;
 
 export const RTP_CLAIM_TABLE = path.join(__dirname, '..', 'outputs', 'rtp-claim-table.json');
 /** SHA-256 of the committed table — re-pin with the run that rewrote it (npm run rtp-claim:write). */
-export const RTP_CLAIM_TABLE_SHA256 = '353103828acecf8c6df95113e924777ee89f88a85da71cc15b82eecce4b94c90';
+export const RTP_CLAIM_TABLE_SHA256 = 'd633c433749651e9995526cdd8091bf053695da17c73a037a6a1a19b696446f8';
 
 export function computeRtpClaim(): RtpClaimResult {
   const domain = 1n << BigInt(4 * DRAW_HEX_CHARS);     // 2^32
