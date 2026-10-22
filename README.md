@@ -1,6 +1,6 @@
 # Duel Castle Roulette — Provably Fair Audit
 
-**Auditor:** [ProvablyFair.org](https://www.provablyfair.org) · **Audit ID:** PF-2026-DL07 · **Release:** `v1.2.0` · **Capture:** 22–23 April 2026
+**Auditor:** [ProvablyFair.org](https://www.provablyfair.org) · **Audit ID:** PF-2026-DL07 · **Release:** `v1.2.1` · **Capture:** 22–23 April 2026
 
 **Result: PROVABLY FAIR — Full Pass.** Every wheel position in the 1,350-round dataset was reproduced from the revealed server seed and the drand quicknet beacon. The verifier reports 19 of 19 scored steps passing, no flags and no hard failures. All 1,350 drand signatures equal the values the public beacon API returned for their rounds.
 

@@ -1,6 +1,6 @@
 # Duel Castle Roulette — Consolidated Audit Overview
 
-**Audit ID:** PF-2026-DL07 · **Auditor:** ProvablyFair.org · **Release:** `v1.2.0` · **Framework:** 1.1
+**Audit ID:** PF-2026-DL07 · **Auditor:** ProvablyFair.org · **Release:** `v1.2.1` · **Framework:** 1.1
 
 Audit date: April 2026. Dataset of record: **1,350 rounds** captured from `2026-04-22T02:20:49.763Z` to `2026-04-23T02:29:27.407Z`. Original publication: 4 June 2026. Audit report: https://audit.provablyfair.org/casino/duel/games/castle-roulette/overview. This overview consolidates the package documentation as of 4 October 2026. The machine-readable release identity remains in [RELEASE-MANIFEST.json](RELEASE-MANIFEST.json).
 
@@ -451,6 +451,7 @@ The HMAC-SHA256 implementation, the commitment-per-round design, the 100% baseli
 | `v1.0.0` | The original audit. | PROVABLY FAIR — Full Pass |
 | `v1.1.0` | Re-certification under Framework 1.1, October 2026, below. The dataset of record is unchanged. | unchanged |
 | `v1.2.0` | The position code rebuilt from a written specification instead of ported from Duel's code; Duel's code kept as a second check. Below, "20 October 2026" and "21 October 2026". | unchanged |
+| `v1.2.1` | Errata: adds `.gitattributes` (`* -text`) so a Windows git clone keeps every file byte-identical; no audit content changed. | unchanged |
 
 ### v1.1.0 — what changed
 
