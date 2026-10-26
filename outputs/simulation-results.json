@@ -628,8 +628,8 @@
   },
   "pass2_casino_seeds": {
     "seedsTested": 1350,
-    "noncesPerSeed": 1000,
+    "noncesPerSeed": 10000,
     "chi2Fails": 15,
-    "meanRTP": 0.9999851851851852
+    "meanRTP": 1.0000973333333334
   }
 }

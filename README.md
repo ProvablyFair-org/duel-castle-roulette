@@ -1,6 +1,6 @@
 # Duel Castle Roulette — Provably Fair Audit
 
-**Auditor:** [ProvablyFair.org](https://www.provablyfair.org) · **Audit ID:** PF-2026-DL07 · **Release:** `v1.2.1` · **Capture:** 22–23 April 2026
+**Auditor:** [ProvablyFair.org](https://www.provablyfair.org) · **Audit ID:** PF-2026-DL07 · **Release:** `v1.3.0` · **Capture:** 22–23 April 2026
 
 **Result: PROVABLY FAIR — Full Pass.** Every wheel position in the 1,350-round dataset was reproduced from the revealed server seed and the drand quicknet beacon. The verifier reports 19 of 19 scored steps passing, no flags and no hard failures. All 1,350 drand signatures equal the values the public beacon API returned for their rounds.
 
@@ -18,7 +18,7 @@
 | Coverage | All 6 colour tiers above the 30-round floor; 48 of 48 wheel positions landed on |
 | Baseline RTP | 100.0000% from the wheel geometry alone; per-tier deviation from the plain `% 48` reduction at most 7.451e-9 |
 | Settlement edge | 473 of 473 winning rounds credited stake × table multiplier exactly at 18 dp, from the served credit and stake: a settlement edge of 0 at the captured stakes |
-| Simulation | 5,000,000 Pass 1 rounds (Fisher's T = 15.09, p = 0.7712) and 1,350 casino seeds × 1,000 beacon values in Pass 2 |
+| Simulation | 5,000,000 Pass 1 rounds (Fisher's T = 15.09, p = 0.7712) and 1,350 casino seeds × 10,000 simulated beacon values derived from the pinned master seed in Pass 2 (15 chi-squared failures against a threshold of 25) |
 | Player verification | Duel's own Verify-tab code (the second check) and the ProvablyFair.org docs-site verifier reproduce all 1,350 positions |
 
 The bet-before-beacon ordering rests on the operator's own bet timestamp, and the server-seed hash was not preserved as a timed pre-round observation. Increasing drand round IDs show ordering only; advance beacon selection (the server choosing which later beacon a round uses) was not verified. These boundaries, the single test account and the operator-tunable settlement parameters are set out in the [overview's limitations](MANIFEST.md#limitations-and-trust).
@@ -42,7 +42,7 @@ npm run timing                    # optional, network: re-fetch every drand sign
 node scripts/release-manifest.mjs --check
 ```
 
-On a fresh clone on 19 October 2026, `npm test` took 82 s and `npm run test:full` 114 s, on a machine shared with other runs. Ordinary runs write to `outputs/run/` and leave the evidence of record intact. See [reproduction details](MANIFEST.md#reproduce-the-audit) for the comparison rules, exit codes, mutation battery and the deliberate artifact-refresh procedure.
+On 23 October 2026 (v1.3.0, Pass 2 at 10,000 values per seed), on a fresh copy of the package files after `npm ci`, `npm test` took 155 s and `npm run test:full` 301 s, on a machine shared with other runs. Ordinary runs write to `outputs/run/` and leave the evidence of record intact. See [reproduction details](MANIFEST.md#reproduce-the-audit) for the comparison rules, exit codes, mutation battery and the deliberate artifact-refresh procedure.
 
 ## Verify a bet
 

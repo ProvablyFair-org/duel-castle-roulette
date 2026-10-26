@@ -30,6 +30,11 @@
  * (Mike's review F16) instead of loaded from cdn.jsdelivr.net/npm/chart.js@4 (a floating major, now pinned
  * exactly in package.json). Regenerated with `PF_EMIT=1 npm run simulate`; simulation-results.json came
  * back byte-identical (c91033bd…) and the html diff is the one <script> tag.
+ *
+ * simulation-results.json RE-PINNED 2026-10-23 (previous pin c91033bd…): Pass 2 raised from 1,000 to
+ * 10,000 simulated beacon values per seed (src/sim-seeds.ts PASS2_NONCES, v1.3.0) and regenerated with
+ * `PF_EMIT=1 npm run simulate`. Only pass2_casino_seeds.noncesPerSeed and .meanRTP changed; Pass 1 is
+ * byte-identical and rtp-convergence.html came back byte-identical (e5b14d85…).
  */
 export const ARTIFACT_PINS: Readonly<Record<string, string>> = Object.freeze({
   'drand-api-verification.json':
@@ -37,5 +42,5 @@ export const ARTIFACT_PINS: Readonly<Record<string, string>> = Object.freeze({
   'rtp-convergence.html':
     'e5b14d856f95f97cf16a99cc06c55ac116246d1256cc655276a622fa41c44c0f',
   'simulation-results.json':
-    'c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d',
+    '99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193',
 });

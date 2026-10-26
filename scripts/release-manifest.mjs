@@ -27,12 +27,12 @@ const DECLARED = {
   auditId: 'PF-2026-DL07',
   game: 'castle-roulette',
   casino: 'duel',
-  release: 'v1.2.1',
+  release: 'v1.3.0',
   framework: '1.1',
   environmentHost: 'duel.com',
   environmentStage: 'production',
   environmentQualifier: null,
-  supersedes: 'v1.2.0',
+  supersedes: 'v1.2.1',
   signature: 'SHA256:gEujiJm2pRyq7lQsfYQfQ1r97H/J7GdaKHbOW8GtikY',
   pending: '',
 };
@@ -40,7 +40,7 @@ const DECLARED = {
 /** How Pass 1 is seeded and attested — described as the package declares it (its src/ and MANIFEST.md). */
 const SIMULATION = {
   seeding: 'pinned',
-  seedSource: 'src/sim-seeds.ts MASTER_SEED (every stream seed and Pass 2 drand value derived by HMAC-SHA256)',
+  seedSource: 'src/sim-seeds.ts MASTER_SEED (every stream seed and Pass 2 simulated beacon value derived by HMAC-SHA256)',
   attestation: 'all 10 Pass 1 streams replayed from src/sim-seeds.ts and lag1R, runs and the convergence series recomputed by Steps 14-15 on every npm test; npm run test:full regenerates the simulation into outputs/run/ and field-diffs it against the pinned artifact at the reproduction tolerance',
 };
 
@@ -67,13 +67,14 @@ function captureWindow(dataset) {
 /** The falsifiability battery. `mutations` is computed from the registry; the RUN RESULT is DECLARED
  * from the last completed `npm run mutate` (cite it in `source`) and must be refreshed by re-running
  * the battery — a generator never asserts a kill it did not run. null = not run for this manifest. */
-const FALSIFIABILITY_DECLARED = { killed: 30, declaredSurvivors: 0, source: 'npm run mutate 2026-10-20 (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (30 entries; M05i retired with the src/rng.ts citation table) on the clean-room tree before the README/MANIFEST wording edits (baseline verify exit 0, mocha exit 0): 30/30 mutations killed; the 30 kills cover 19/19 scored steps; M05d retargeted to the rebuilt module (DRAW_HEX_CHARS) and killed by Step 5' };
+const FALSIFIABILITY_DECLARED = { killed: 31, declaredSurvivors: 0, source: 'npm run mutate 2026-10-23 (Apple M2 Max, 12 cores, node v22.23.1), one serial run of the whole registry (31 entries; M15b added with the Pass 2 floor) on the v1.3.0 tree before the README/MANIFEST edits and the release-manifest refresh (baseline verify exit 0, mocha exit 0): 31/31 mutations killed; the 31 kills cover 19/19 scored steps; wall 4821 s' };
 
 /** How long `npm test` takes, and on what — a property of the machine, so DECLARED from measured runs. */
 const RUNTIME = {
   command: 'npm test',
   measured: [
     { date: '2026-09-28', machine: 'Apple M2 Max', cores: 12, node: '22.23.1', wallSeconds: 80.74, by: 'time npm test' },
+    { date: '2026-10-23', machine: 'Apple M2 Max', cores: 12, node: '22.23.1', wallSeconds: 155.24, by: 'time npm test (v1.3.0, Pass 2 at 10,000 values per seed; fresh copy of the package files after npm ci)' },
   ],
 };
 

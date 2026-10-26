@@ -5,7 +5,8 @@
  *      stream REPLAYED from src/sim-seeds.ts to bind those counts to the generator.
  *  15. Simulation Pass 2 — casino seed distribution test. REPLAYED in full from the pinned
  *      dataset's seeds and the src/sim-seeds.ts drand schedule; the artifact's scalars are
- *      compared with the replay, not trusted.
+ *      compared with the replay, not trusted. FAILs below the framework floor of
+ *      PASS2_NONCES_FLOOR values per seed (src/sim-seeds.ts).
  *  16. drand API Signature Verification — the 1,350 per-round rows RECOUNTED and bound to the
  *      dataset, not the artifact's own totalRounds/passed/failed summary.
  *
@@ -19,7 +20,7 @@ import type { VerifyContext, StepResult } from './context';
 import { chiSquaredTest, chiSquaredPValue, normalCDF, lag1Autocorrelation, runsTest } from '../../src/stats';
 import { computePositionFromBuffer, RANGE } from '../../src/rng';
 import {
-  PASS1_STREAMS, PASS1_ROUNDS_EACH, PASS1_ROUNDS_TOTAL, PASS2_NONCES, PASS1_CONVERGENCE_POINTS,
+  PASS1_STREAMS, PASS1_ROUNDS_EACH, PASS1_ROUNDS_TOTAL, PASS2_NONCES, PASS2_NONCES_FLOOR, PASS1_CONVERGENCE_POINTS,
   pass1Position, pass2Drand,
 } from '../../src/sim-seeds';
 import { numbersAgree } from '../../src/diff';
@@ -207,6 +208,9 @@ function step15(sim: any, ctx: VerifyContext): StepResult {
   // Full replay: the same seeds (distinct server seeds of the pinned dataset, in dataset order),
   // the same drand schedule, the same test.
   const casinoSeeds = [...new Set(ctx.rounds.map(r => r.result.serverSeed))];
+  // The framework floor (C-08), since 2026-10-23: a Pass 2 cut below it fails here even when the
+  // artifact was regenerated to match the smaller run, which the replay alone would accept.
+  if (PASS2_NONCES < PASS2_NONCES_FLOOR) issues.push(`PASS2_NONCES ${PASS2_NONCES} is below the framework floor of ${PASS2_NONCES_FLOOR} values per revealed seed`);
   if (casinoSeeds.length !== EXPECTED_DISTINCT_SEEDS) issues.push(`distinct casino seeds ${casinoSeeds.length} != ${EXPECTED_DISTINCT_SEEDS} (src/loader.ts)`);
   let chi2Fails = 0;
   let wagered = 0;
@@ -241,11 +245,12 @@ function step15(sim: any, ctx: VerifyContext): StepResult {
     name: 'Simulation Pass 2 (Casino Seeds)',
     status: ok ? 'PASS' : 'FAIL',
     detail: ok
-      ? `REPLAYED in full: ${casinoSeeds.length} distinct casino seeds from the pinned dataset × ${PASS2_NONCES} drand values from src/sim-seeds.ts — ${chi2Fails} chi-squared failures against a threshold of ${threshold} under H₀; seedsTested, chi2Fails and meanRTP in the artifact agree with the replay. Mean casino RTP in this step's data block.`
+      ? `REPLAYED in full: ${casinoSeeds.length} distinct casino seeds from the pinned dataset × ${PASS2_NONCES} simulated beacon values derived from the pinned master seed in src/sim-seeds.ts (framework floor ${PASS2_NONCES_FLOOR}) — ${chi2Fails} chi-squared failures against a threshold of ${threshold} under H₀; seedsTested, chi2Fails and meanRTP in the artifact agree with the replay. Mean casino RTP in this step's data block.`
       : `${issues.length} issue(s): ${issues.slice(0, 5).join('; ')}`,
     data: {
       seedsTested: casinoSeeds.length,
       noncesPerSeed: PASS2_NONCES,
+      noncesFloor: PASS2_NONCES_FLOOR,
       chi2Fails,
       threshold,
       expectedFailsUnderH0: expectedFails,

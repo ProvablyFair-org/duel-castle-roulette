@@ -9,7 +9,7 @@
  *   48 positions, combined via Fisher's: T = -2 Σ ln(p_i) ~ χ²(2K).
  *   Serial independence tested on full 5M combined stream.
  *
- * Pass 2: Casino seeds from dataset × random drand values — a seed-selection-by-outcome screen; it cannot see a
+ * Pass 2: Casino seeds from dataset × simulated beacon values derived from the pinned master seed — a seed-selection-by-outcome screen; it cannot see a
  *         seed chosen for its own beacon (MANIFEST S5-4, P6).
  *
  * Run: npm run simulate
@@ -190,7 +190,7 @@ console.log(`  Time: ${((Date.now() - startP1) / 1000).toFixed(1)}s\n`);
 
 console.log('════════════════════════════════════════════════════════════');
 console.log('  PASS 2 — Casino seeds from dataset');
-console.log(`  ${loadDataset().rounds.length} seeds × ${PASS2_NONCES} random drand values`);
+console.log(`  ${loadDataset().rounds.length} seeds × ${PASS2_NONCES} simulated beacon values (pinned master seed)`);
 console.log('════════════════════════════════════════════════════════════\n');
 
 const ds = loadDataset();

@@ -483,14 +483,15 @@
       "step": 15,
       "name": "Simulation Pass 2 (Casino Seeds)",
       "status": "PASS",
-      "detail": "REPLAYED in full: 1350 distinct casino seeds from the pinned dataset × 1000 drand values from src/sim-seeds.ts — 15 chi-squared failures against a threshold of 25 under H₀; seedsTested, chi2Fails and meanRTP in the artifact agree with the replay. Mean casino RTP in this step's data block.",
+      "detail": "REPLAYED in full: 1350 distinct casino seeds from the pinned dataset × 10000 simulated beacon values derived from the pinned master seed in src/sim-seeds.ts (framework floor 10000) — 15 chi-squared failures against a threshold of 25 under H₀; seedsTested, chi2Fails and meanRTP in the artifact agree with the replay. Mean casino RTP in this step's data block.",
       "data": {
         "seedsTested": 1350,
-        "noncesPerSeed": 1000,
+        "noncesPerSeed": 10000,
+        "noncesFloor": 10000,
         "chi2Fails": 15,
         "threshold": 25,
         "expectedFailsUnderH0": 13.5,
-        "meanRTP": 0.9999851851851852,
+        "meanRTP": 1.0000973333333334,
         "replayed": true,
         "issues": []
       },
@@ -501,7 +502,7 @@
         {
           "id": "CASTLE-21",
           "coverage": "partial",
-          "note": "what IS asserted: all 1,350 revealed server seeds × 1,000 beacon values (src/sim-seeds.ts) REPLAYED in full each run; per-seed 48-cell chi-squared at α = 0.01, failures against a pre-registered 3σ threshold; artifact scalars compared with the replay. PARTIAL: 1,000 beacon values per seed against the 10,000 floor; the null is a count threshold, not an exact or bootstrap null; no detection power printed"
+          "note": "what IS asserted: all 1,350 revealed server seeds × 10,000 simulated beacon values (derived from MASTER_SEED in src/sim-seeds.ts; since 2026-10-23, was 1,000, which are kept unchanged as each seed's first 1,000) REPLAYED in full each run; per-seed 48-cell chi-squared at α = 0.01, failures against a pre-registered 3σ threshold; artifact scalars compared with the replay; FAILs below the framework floor of 10,000 values per seed (FAIL probed, M15b). PARTIAL: the null is a count threshold, not an exact or bootstrap null; no detection power printed"
         }
       ]
     },
@@ -603,8 +604,8 @@
             "match": true
           },
           "simulation-results.json": {
-            "expected": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
-            "actual": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+            "expected": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
+            "actual": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
             "match": true
           }
         },
@@ -741,7 +742,7 @@
         "id": "CASTLE-29",
         "artifact": "tests/mutations.json + scripts/mutate.mjs",
         "coverage": "full",
-        "note": "added 2026-09-26 (runner ported from Duel Video Poker via Beef): 22 step-named mutations run in a disposable copy by `npm run mutate` (300 s hard timeout per run), each with the marker of the guard that must fire; includes forgeries that edit a pinned artifact AND re-pin it (M14, M15, M16) and a site-verifier forgery re-pinned (M05c). Measured 2026-09-26: 22/22 killed, 18/18 scored steps covered; re-run after Step 19 and M14b/M14c/M18b/M19 were added: 26/26 killed, 19/19 scored steps covered; re-run after Duel's Verify-tab code was wired into Step 5 (M05e–M05i: operator file forged AND re-pinned, file and runner edited without re-pin, runner forged AND re-pinned, a citation moved): 31/31 killed, 19/19 covered (M05i, the moved citation, was retired on 2026-10-20 with the src/rng.ts citation table, leaving 30 entries); re-run 2026-10-04 after M09 was replaced by a settlement-edge forgery (a win credited at a 0.1% edge) and the disposable copy was given outputs/rtp-claim-table.json (without it the copy's baseline was not green): 31/31 killed, 19/19 covered. A first draft of M12 edited src/loader.ts DRAND_PERIOD and SURVIVED — that constant is dead code (Step 12 uses its own QUICKNET_PERIOD in tests/steps/dataset.ts:13); M12 now forges a publication time. No declared survivors"
+        "note": "added 2026-09-26 (runner ported from Duel Video Poker via Beef): 22 step-named mutations run in a disposable copy by `npm run mutate` (300 s hard timeout per run), each with the marker of the guard that must fire; includes forgeries that edit a pinned artifact AND re-pin it (M14, M15, M16) and a site-verifier forgery re-pinned (M05c). Measured 2026-09-26: 22/22 killed, 18/18 scored steps covered; re-run after Step 19 and M14b/M14c/M18b/M19 were added: 26/26 killed, 19/19 scored steps covered; re-run after Duel's Verify-tab code was wired into Step 5 (M05e–M05i: operator file forged AND re-pinned, file and runner edited without re-pin, runner forged AND re-pinned, a citation moved): 31/31 killed, 19/19 covered (M05i, the moved citation, was retired on 2026-10-20 with the src/rng.ts citation table, leaving 30 entries); re-run 2026-10-04 after M09 was replaced by a settlement-edge forgery (a win credited at a 0.1% edge) and the disposable copy was given outputs/rtp-claim-table.json (without it the copy's baseline was not green): 31/31 killed, 19/19 covered. A first draft of M12 edited src/loader.ts DRAND_PERIOD and SURVIVED — that constant is dead code (Step 12 uses its own QUICKNET_PERIOD in tests/steps/dataset.ts:13); M12 now forges a publication time. M15b added 2026-10-23 with the Pass 2 floor (Pass 2 cut to 1,000 values per seed in code and artifact, re-pinned; only the floor can reject it), 31 entries; the latest battery run is recorded in MANIFEST.md (Reproduce the audit). No declared survivors"
       },
       {
         "id": "CASTLE-30",

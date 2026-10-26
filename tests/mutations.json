@@ -249,7 +249,7 @@
   "repin": [
    {
     "file": "src/artifact-pins.ts",
-    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "find": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
     "hashOf": "outputs/simulation-results.json"
    }
   ],
@@ -266,7 +266,7 @@
   "repin": [
    {
     "file": "src/artifact-pins.ts",
-    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "find": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
     "hashOf": "outputs/simulation-results.json"
    }
   ],
@@ -283,7 +283,7 @@
   "repin": [
    {
     "file": "src/artifact-pins.ts",
-    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "find": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
     "hashOf": "outputs/simulation-results.json"
    }
   ],
@@ -300,7 +300,38 @@
   "repin": [
    {
     "file": "src/artifact-pins.ts",
-    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "find": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
+    "hashOf": "outputs/simulation-results.json"
+   }
+  ],
+  "runner": "verify"
+ },
+ {
+  "name": "M15b Pass 2 cut back to 1,000 values per seed, the artifact set to that run's figures and re-pinned",
+  "step": 15,
+  "expect": "is below the framework floor",
+  "guard": "CASTLE-21: Pass 2 holds at least the framework floor of 10,000 values per revealed seed (src/sim-seeds.ts PASS2_NONCES_FLOOR). The mutation is consistent: PASS2_NONCES set to 1,000 and the artifact's Pass 2 block set to what that run produces (15 failures, mean RTP 0.9999851851851852, the v1.2.1 figures, since the first 1,000 values per seed are the v1.2.1 schedule), so the replay agrees and only the floor can catch it.",
+  "edits": [
+   {
+    "file": "src/sim-seeds.ts",
+    "find": "export const PASS2_NONCES       = 10_000;",
+    "replace": "export const PASS2_NONCES       = 1_000;"
+   },
+   {
+    "file": "outputs/simulation-results.json",
+    "find": "\"noncesPerSeed\": 10000,",
+    "replace": "\"noncesPerSeed\": 1000,"
+   },
+   {
+    "file": "outputs/simulation-results.json",
+    "find": "\"meanRTP\": 1.0000973333333334",
+    "replace": "\"meanRTP\": 0.9999851851851852"
+   }
+  ],
+  "repin": [
+   {
+    "file": "src/artifact-pins.ts",
+    "find": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
     "hashOf": "outputs/simulation-results.json"
    }
   ],
@@ -354,7 +385,7 @@
   "repin": [
    {
     "file": "src/artifact-pins.ts",
-    "find": "c91033bd6aed05fbc13f74370627122c7a7db3ed5f4748bae73bf329b718499d",
+    "find": "99336e4ac229c08b57042aa96f38efc2dd49f8d90f24433fb2547f316a59f193",
     "hashOf": "outputs/simulation-results.json"
    }
   ],

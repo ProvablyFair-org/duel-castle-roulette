@@ -150,9 +150,10 @@ export const STEP_CLAIMS: Record<number, StepClaims> = {
   }] },
   15: { claims: [{
     id: 'CASTLE-21', coverage: 'partial',
-    note: 'what IS asserted: all 1,350 revealed server seeds × 1,000 beacon values (src/sim-seeds.ts) REPLAYED in full each '
-      + 'run; per-seed 48-cell chi-squared at α = 0.01, failures against a pre-registered 3σ threshold; artifact scalars '
-      + 'compared with the replay. PARTIAL: 1,000 beacon values per seed against the 10,000 floor; the null is a count '
+    note: 'what IS asserted: all 1,350 revealed server seeds × 10,000 simulated beacon values (derived from MASTER_SEED in src/sim-seeds.ts; since 2026-10-23, '
+      + 'was 1,000, which are kept unchanged as each seed\'s first 1,000) REPLAYED in full each run; per-seed 48-cell '
+      + 'chi-squared at α = 0.01, failures against a pre-registered 3σ threshold; artifact scalars compared with the replay; '
+      + 'FAILs below the framework floor of 10,000 values per seed (FAIL probed, M15b). PARTIAL: the null is a count '
       + 'threshold, not an exact or bootstrap null; no detection power printed',
   }] },
   16: { claims: [{
@@ -258,7 +259,9 @@ export const PACKAGE_CHECKS: Array<{ id: string; artifact: string; coverage: Cov
       + 're-run 2026-10-04 after M09 was replaced by a settlement-edge forgery (a win credited at a 0.1% edge) and the disposable copy '
       + 'was given outputs/rtp-claim-table.json (without it the copy\'s baseline was not green): 31/31 killed, 19/19 covered. A first draft of M12 edited src/loader.ts DRAND_PERIOD and '
       + 'SURVIVED — that constant is dead code (Step 12 uses its own QUICKNET_PERIOD in tests/steps/dataset.ts:13); M12 now '
-      + 'forges a publication time. No declared survivors' },
+      + 'forges a publication time. M15b added 2026-10-23 with the Pass 2 floor (Pass 2 cut to 1,000 values per seed in code '
+      + 'and artifact, re-pinned; only the floor can reject it), 31 entries; the latest battery run is recorded in MANIFEST.md '
+      + '(Reproduce the audit). No declared survivors' },
   { id: 'CASTLE-30', artifact: 'MANIFEST.md#limitations-and-trust + MANIFEST.md#evidence', coverage: 'full',
     note: 'MANIFEST.md carries (since 2026-09-26) the declared-limitations register DL-1 … DL-7 with measured magnitudes and '
       + 'the Load-Bearing Premises table with ASSUMED markers; MANIFEST Evidence numbers every exhibit E01–E09 with its role' },
