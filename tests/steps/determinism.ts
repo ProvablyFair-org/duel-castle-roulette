@@ -86,7 +86,7 @@ export function run(ctx: VerifyContext): StepResult[] {
     // ── Fourth leg: THE OPERATOR'S OWN Verify-tab code (CASTLE-09 — added 2026-09-26) ──────────
     // A SECOND CHECK, not the source: src/rng.ts is rebuilt from docs/ALGORITHM.md by an implementer who
     // never opened Duel's code (since 20 Oct 2026, v1.2.0). Duel's Castle Roulette code panel, pasted by
-    // Paulo from the Verify tab on 2026-09-26, vendored
+    // the auditor from the Verify tab on 2026-09-26, vendored
     // verbatim under evidence/verify-tab/ and pinned in src/operator-verifier.ts. The pinned runner fills
     // in the file's two "User input values" (serverSeed, drandSeed = the captured drandRandomness hex)
     // and runs it. Its validateRouletteResult returns the position as a string; it must be exactly

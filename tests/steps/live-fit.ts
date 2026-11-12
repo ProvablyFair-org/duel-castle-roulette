@@ -14,7 +14,7 @@
  *  2. WIN RATES per coin tier vs the binomial: the rounds that bet on each tier, P(win) = the exact
  *     probability mass of that tier's positions under the same reduction; two-sided exact binomial.
  *
- * A deviation turns the step to INFO — never to FLAG or FAIL: profile policy INFORMATIONAL (Mike
+ * A deviation turns the step to INFO — never to FLAG or FAIL: profile policy INFORMATIONAL (since
  * 2026-09-29), reported, never counted, verdict unchanged. The measured statistics live in `data`; the
  * sentence states the bounds.
  */

@@ -162,7 +162,7 @@ export function run(ctx: VerifyContext): StepResult[] {
   }
 
   // Step 9: Settlement Edge Verification
-  // REBASED 2026-10-04 (Mike's publish-blocker list). The step used to count result.effectiveEdge === 0,
+  // REBASED 2026-10-04. The step used to count result.effectiveEdge === 0,
   // but the capture script writes that field as the literal 0 (capture/castle-roulette-capture.reference.js
   // :158), so it measured the script, not Duel. Zero settlement-stage edge is now DERIVED from served
   // settlement data: a round is a win when the RECOMPUTED tier equals request.coin, and on every such

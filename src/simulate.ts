@@ -273,7 +273,7 @@ console.log(`  Written: ${WROTE_TO}/simulation-results.json`);
 
 const chartLabels = convergenceData.map(d => d.rounds >= 1e6 ? (d.rounds / 1e6) + 'M' : d.rounds >= 1e3 ? (d.rounds / 1e3) + 'K' : String(d.rounds));
 
-// Chart.js is INLINED into the pinned chart (Mike 2026-09-28, F16): a pinned artifact that loads a script
+// Chart.js is INLINED into the pinned chart (since 2026-09-28): a pinned artifact that loads a script
 // from a CDN renders only while a third party serves the same bytes. The library is read verbatim from the
 // npm package pinned (exact version) in package.json / package-lock.json and interpolated as a value.
 const CHARTJS_VERSION = '4.4.7';

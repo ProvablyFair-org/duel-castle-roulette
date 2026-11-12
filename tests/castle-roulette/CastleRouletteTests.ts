@@ -198,7 +198,7 @@ describe('Statistics', () => {
 describe('Second check — Duel\'s own Castle Roulette Verify-tab code, executed with only its inputs filled in (pasted 2026-09-26)', function () {
   this.timeout(300_000);
   // Not the source of src/rng.ts: that is rebuilt from docs/ALGORITHM.md. Duel's code is run as a cross-check.
-  // duel.com → Provably Fair → Verify (Castle Roulette) code panel, pasted by Paulo 2026-09-26, saved verbatim (src/operator-verifier.ts)
+  // duel.com → Provably Fair → Verify (Castle Roulette) code panel, pasted by the auditor 2026-09-26, saved verbatim (src/operator-verifier.ts)
   const { runOperatorVerifier, operatorPosition, OPERATOR_VERIFIER_PINS, OPERATOR_VERIFIER_FILE, OPERATOR_EXPECTED_LOGS } =
     require('../../src/operator-verifier') as typeof import('../../src/operator-verifier');
   const ds = loadDataset();

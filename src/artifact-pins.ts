@@ -27,7 +27,7 @@
  * conformance C-04).
  *
  * rtp-convergence.html RE-PINNED 2026-09-28 (previous pin 44ee6f5f…): Chart.js 4.4.7 is inlined verbatim
- * (Mike's review F16) instead of loaded from cdn.jsdelivr.net/npm/chart.js@4 (a floating major, now pinned
+ * instead of loaded from cdn.jsdelivr.net/npm/chart.js@4 (a floating major, now pinned
  * exactly in package.json). Regenerated with `PF_EMIT=1 npm run simulate`; simulation-results.json came
  * back byte-identical (c91033bd…) and the html diff is the one <script> tag.
  *

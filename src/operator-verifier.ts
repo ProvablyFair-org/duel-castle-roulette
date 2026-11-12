@@ -10,7 +10,7 @@
  * positions. Through v1.1.0 src/rng.ts was a port of this file and, from 26 Sep 2026, cited 8 of its lines;
  * the port and that citation table were removed on 20 Oct 2026.
  *
- * PROVENANCE. Pasted by Paulo from duel.com → Provably Fair → Verify (Castle Roulette) on 2026-09-26 and
+ * PROVENANCE. Pasted by the auditor from duel.com → Provably Fair → Verify (Castle Roulette) on 2026-09-26 and
  * saved verbatim as evidence/verify-tab/duel-verify-tab-castle-roulette-2026-09-26.js (committed in
  * 9333460; 2,263 bytes, 72 lines). The file is never edited. Until then Castle Roulette's Verify-tab
  * code was not in the workspace (CASTLE-09 partial). What this does NOT establish: that the Verify
